@@ -98,47 +98,53 @@ test("logging, persistence, profile switching, environment theme, hazards and da
   await expect(panel.getByLabel("Mission day", { exact: true })).toHaveValue("93");
 });
 
-test("crew: attention queue, detail, privacy, check-in with note, history", async ({ page }) => {
+test("crew: queue, detail, privacy, check-in with a concern, crewmate acknowledges", async ({ page }) => {
   await page.goto("./#/crew");
   const queue = page.locator(".queue");
-  await expect(queue).toContainText("The monitoring policy requested a check-in from you");
-  await expect(page.locator(".crew-detail")).toContainText("Shared wellness trends");
+  await expect(queue).toContainText("Check-in requested by the monitoring policy");
+  await expect(page.locator(".crew-detail .spark")).toHaveCount(3);
   await expect(page.locator(".crew-detail .strip .cell")).toHaveCount(14);
   await page.locator(".who-btn", { hasText: "Nada Aboubaker" }).click();
-  await expect(page.locator(".crew-detail")).toContainText("limited sharing");
-  await expect(page.locator(".spark")).toHaveCount(0);
-  await queue.getByRole("button", { name: "Check in now" }).click();
+  await expect(page.locator(".crew-detail")).toContainText("shares status and check-ins only");
+  await expect(page.locator(".crew-detail .spark")).toHaveCount(0);
+  await queue.getByRole("button", { name: "Check in", exact: true }).click();
   await expect(page.locator(".crew-detail h2")).toContainText("Ali Shahroor");
-  await page.getByText("Requests a conversation", { exact: true }).last().click();
-  await page.getByLabel("Note for the crew (optional)").fill("Short sleep this week");
-  await page.getByRole("button", { name: "Submit check-in" }).click();
-  await expect(page.locator(".checkin-history li").first()).toContainText("Short sleep this week");
+  await page.locator(".crew-detail label.choice", { hasText: "I’d like to talk" }).click();
+  await page.getByLabel("Note (optional)").fill("Short sleep this week");
+  await page.locator(".checkin-form").getByRole("button", { name: "Check in", exact: true }).click();
+  await expect(page.locator(".checkin-done")).toContainText("Would like to talk");
+  await expect(page.locator(".checkin-done")).toContainText("Short sleep this week");
   await expect(queue).not.toContainText("monitoring policy");
-  await expect(queue).not.toContainText("Your check-in for today is due");
-  await page.getByRole("button", { name: "Activity" }).click();
-  await expect(page.locator(".log")).toContainText("Ali checked in: Requests a conversation");
-  await page.reload();
-  await expect(page.getByRole("button", { name: "Activity" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".log")).toContainText("Ali checked in: Would like to talk");
+  await page.getByRole("button", { name: /Profile:/ }).click();
+  await page.getByRole("menuitemradio", { name: /Mohammad Al-Ani/ }).click();
+  await expect(queue).toContainText("Ali would like to talk");
+  await queue.locator("li", { hasText: "would like to talk" }).getByRole("button", { name: "Acknowledge" }).click();
+  await expect(queue).not.toContainText("would like to talk");
+  await expect(page.locator(".log")).toContainText("Ali’s request was acknowledged");
 });
 
-test("cross-profile: Ali requests a check-in, signs out; Mohammad sees and answers it", async ({ page }) => {
+test("cross-profile: Ali asks Mohammad to check in, signs out; Mohammad answers", async ({ page }) => {
   await page.goto("./#/crew");
   await page.locator(".who-btn", { hasText: "Mohammad Al-Ani" }).click();
-  await page.locator(".crew-detail").getByRole("button", { name: "Request check-in" }).click();
+  await page.getByRole("button", { name: /Ask Mohammad (to check in|for an update)/ }).click();
+  await expect(page.locator(".crew-detail .sent")).toContainText("Waiting for Mohammad");
+  await page.locator(".crew-detail .sent").getByRole("button", { name: "Withdraw" }).click();
+  await page.getByRole("button", { name: /Ask Mohammad (to check in|for an update)/ }).click();
+  await expect(page.locator(".roster tr", { hasText: "Mohammad Al-Ani" })).toContainText("Requested by you");
   await page.getByRole("button", { name: /Profile:/ }).click();
   await page.getByRole("menuitem", { name: "Sign out of demo session" }).click();
   await page.getByRole("button", { name: "Enter Mission System" }).click();
   await page.getByRole("button", { name: /Enter as Mohammad Al-Ani/ }).click();
   await page.getByRole("button", { name: "Open Workspace" }).click();
   await nav(page, "Crew").click();
-  await expect(page.locator(".queue")).toContainText("Ali Shahroor requested a check-in from you");
-  await page.locator(".queue").getByRole("button", { name: "Check in now" }).click();
-  await page.getByRole("button", { name: "Submit check-in" }).click();
-  await expect(page.locator(".queue")).not.toContainText("requested a check-in from you");
+  await expect(page.locator(".queue")).toContainText("Check-in requested by Ali");
+  await page.locator(".queue").getByRole("button", { name: "Check in", exact: true }).click();
+  await page.locator(".checkin-form").getByRole("button", { name: "Check in", exact: true }).click();
+  await expect(page.locator(".queue")).not.toContainText("Check-in requested by Ali");
   await page.getByRole("button", { name: /Profile:/ }).click();
   await page.getByRole("menuitemradio", { name: /Ali Shahroor/ }).click();
-  await page.getByRole("button", { name: "Activity" }).click();
-  await expect(page.locator(".log")).toContainText("Mohammad checked in");
+  await expect(page.locator(".log")).toContainText("Mohammad answered Ali’s request");
 });
 
 test("daily briefing: findings, changes, crew, tasks", async ({ page }) => {

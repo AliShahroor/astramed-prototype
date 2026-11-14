@@ -2,7 +2,14 @@ import { astronauts } from "../data/catalog";
 import { dayTimestamp } from "../engine/monitoring";
 import type { AppState } from "../types";
 
-export const CHECKIN: Record<string, string> = { ok: "No concerns", talk: "Requests a conversation", support: "Requests medical support" };
+/** First-person wording used in the check-in form. */
+export const CHECKIN: Record<string, string> = { ok: "All good", talk: "I’d like to talk", support: "I need medical support" };
+/** Third-person wording used everywhere else. */
+export const CHECKIN_STATUS: Record<string, string> = { ok: "All good", talk: "Would like to talk", support: "Needs medical support" };
+export const nowTime = () => {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+};
 export const time = (iso: string) => {
   const d = Math.floor((Date.parse(iso) - Date.parse(dayTimestamp(1, 0))) / 86400000) + 1;
   return `Day ${d}, ${iso.slice(11, 16)}`;
