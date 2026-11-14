@@ -12,6 +12,9 @@
 | Root production Playwright suite | 8 / 8 passed before publication path changes. |
 | Exact subdirectory production Playwright suite | 8 / 8 passed after final changes, in 28.3 seconds. |
 | Credential-pattern scan of publication files | No matching token/private-key patterns found. This is not a full security audit. |
+| GitHub Actions production release | Passed clean install, lint, 18 unit tests, TypeScript/build and Pages deployment on Node 22 / Ubuntu. |
+| Public-site browser acceptance | 8 / 8 passed in 34.5 seconds in fresh isolated Chrome contexts against the live GitHub Pages URL. |
+| Original NASA evidence URLs | All six returned HTTP 200 during release verification. |
 
 The dependency audit’s earlier development-only minimatch advisory was removed with a targeted override under @typescript-eslint/typescript-estree. Lint and TypeScript pass with the patched dependency. Runtime and development audit reported zero known vulnerabilities at clean install; advisories may change.
 
@@ -47,7 +50,11 @@ The browser console capture in the primary scenario/evidence flow reported no un
 
 ## Publication status
 
-The independent target repository [AliShahroor/astramed-prototype](https://github.com/AliShahroor/astramed-prototype) was created and remains empty. Automatic approval review rejected the commit-and-public-push operation because it requires explicit authorization for the exact public destination and payload. No application source was pushed and no new Pages deployment was performed. The existing astramed repository and Pages site are preserved. The proposed payload is 42 prepared source, configuration, test, documentation and screenshot files; user reference PDFs/DOCX, Template2, node_modules and local exports are excluded. Public publication and live-site verification remain pending approval.
+Published after explicit user approval to [AliShahroor/astramed-prototype](https://github.com/AliShahroor/astramed-prototype). The application is live at [ASTRAMED on GitHub Pages](https://alishahroor.github.io/astramed-prototype/) without authentication. The separate existing astramed repository/site, local template copy, reference documents and Template2 were preserved.
+
+[Release workflow 43611521046](https://github.com/AliShahroor/astramed-prototype/actions/runs/43611521046) completed successfully. Its deployed application commit is `de4ade0`. The full eight-test acceptance suite passed against that public deployment in fresh browser contexts, including offline navigation, local evidence, timing practice and manual-reading persistence after an offline reload. Subsequent publication-documentation and screenshot updates do not change the deployed application code.
+
+No reference PDFs/DOCX, Template2, local template copy, dependencies, exports or private credentials were published. The release contains the 42 approved source, configuration, test, documentation and screenshot files. No official submission video, final slide deck or competition portal submission has been produced.
 
 ## Explicitly unverified
 
