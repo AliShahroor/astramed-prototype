@@ -5,7 +5,7 @@
    The mission environment re-tints surfaces and the interaction accent only. */
 :root {
   color-scheme: dark;
-  --bg: #0a0f13;
+  --bg: #1a191c;
   --surface: #0f161b;
   --surface-2: #141d23;
   --surface-3: #1a252c;
@@ -37,19 +37,19 @@
 }
 /* Mars transit: warm iron-oxide surfaces, sand accent */
 :root[data-env="mars"] {
-  --bg: #0f0c0b; --surface: #16110f; --surface-2: #1c1613; --surface-3: #241c18;
+  --bg: #1d1916; --surface: #16110f; --surface-2: #1c1613; --surface-3: #241c18;
   --line: #2b221d; --line-strong: #3f3129; --text-2: #bbaea6; --text-3: #9b8c84;
   --accent: #c9a17d; --accent-strong: #dcb995; --accent-ink: #2a1a0c; --accent-soft: rgba(201, 161, 125, .15);
 }
 /* Lunar surface: neutral regolith greys, silver accent */
 :root[data-env="moon"] {
-  --bg: #0c0d0f; --surface: #131418; --surface-2: #191b20; --surface-3: #212329;
+  --bg: #1b1a18; --surface: #131418; --surface-2: #191b20; --surface-3: #212329;
   --line: #25272e; --line-strong: #363a43; --text-2: #b0b4bc; --text-3: #8f949d;
   --accent: #aebdd0; --accent-strong: #c8d3e1; --accent-ink: #12171e; --accent-soft: rgba(174, 189, 208, .14);
 }
 /* Earth reference: deep ocean blues, blue accent */
 :root[data-env="earth"] {
-  --bg: #08101a; --surface: #0d1724; --surface-2: #121e2d; --surface-3: #182637;
+  --bg: #181a1f; --surface: #0d1724; --surface-2: #121e2d; --surface-3: #182637;
   --line: #1a2a3b; --line-strong: #2a3d53; --text-2: #a9b8c8; --text-3: #8798ab;
   --accent: #5aa8e6; --accent-strong: #7dbbee; --accent-ink: #03182b; --accent-soft: rgba(90, 168, 230, .15);
   --info: #a7c7e6;
@@ -629,81 +629,33 @@ kbd { font-family: ui-monospace, Menlo, monospace; font-size: 12px; padding: 1px
 .cog-choices .btn { justify-content: center; }
 @media (max-width: 600px) { .msp-grid { grid-template-columns: repeat(4, 22px); } .msp-grid span { width: 22px; height: 22px; } .msp-choice { gap: var(--s5); } .cog-pair, .cog-math { font-size: 32px; } }
 
-/* ═════════ Environment backdrop + frosted glass ═════════
-   A 4K photo per environment sits behind everything and cross-fades when the
-   environment changes. UI surfaces become translucent "glass" so the photo
-   shows through while text stays readable. Glass tints are derived from the
-   existing per-environment surface tokens via color-mix, so they re-tint
-   automatically with [data-env] — no per-environment duplication needed. */
-:root {
-  --glass:        color-mix(in srgb, var(--surface)    56%, transparent);
-  --glass-2:      color-mix(in srgb, var(--surface-2)  60%, transparent);
-  --glass-strong: color-mix(in srgb, var(--surface-2)  84%, transparent);
-  --glass-line:   color-mix(in srgb, var(--line-strong) 68%, transparent);
-  --blur: 16px;
-}
+/* ═════════ Environment title bar + solid background ═════════
+   The environment photo appears only as the top title bar's backdrop. The rest
+   of the page uses a solid colour sampled from that photo and darkened for
+   legibility (the per-environment --bg values set in the theme blocks above).
+   The image is selected here via --env-img and swaps when [data-env] changes. */
+:root                   { --env-img: url(/bg/orbit.jpg); }
+:root[data-env="mars"]  { --env-img: url(/bg/mars.jpg); }
+:root[data-env="moon"]  { --env-img: url(/bg/moon.jpg); }
+:root[data-env="earth"] { --env-img: url(/bg/earth.jpg); }
 
-/* Backdrop layers */
-.envbg { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; }
-.envbg__layer {
-  position: absolute; inset: 0;
-  background-size: cover; background-position: center; background-repeat: no-repeat;
-  opacity: 0; transition: opacity .9s ease; will-change: opacity;
-}
-.envbg--mars  { background-image: url(/bg/mars.jpg); }
-.envbg--orbit { background-image: url(/bg/orbit.jpg); }
-.envbg--moon  { background-image: url(/bg/moon.jpg); }
-.envbg--earth { background-image: url(/bg/earth.jpg); }
-:root[data-env="mars"]  .envbg--mars,
-:root[data-env="orbit"] .envbg--orbit,
-:root[data-env="moon"]  .envbg--moon,
-:root[data-env="earth"] .envbg--earth,
-:root:not([data-env])   .envbg--mars { opacity: 1; }
-/* Readability scrim: darker top and bottom, plus a soft vignette. */
-.envbg__scrim {
-  position: absolute; inset: 0;
-  background:
-    radial-gradient(130% 100% at 50% 0%, transparent 0%, rgba(4, 7, 10, .30) 72%),
-    linear-gradient(180deg, rgba(4, 7, 10, .66) 0%, rgba(4, 7, 10, .58) 30%, rgba(4, 7, 10, .60) 64%, rgba(4, 7, 10, .84) 100%);
-}
-
-/* Let the backdrop show through; the scrim above dims it uniformly for readability. */
-body { background: transparent; }
-
-/* Chrome */
-.sidebar {
-  background: var(--glass); border-right-color: var(--glass-line);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.2);
-          backdrop-filter: blur(var(--blur)) saturate(1.2);
-}
+/* Title bar carries the photo, dimmed with an env-tinted gradient (darkest on
+   the left under the heading, lighter on the right) so text and controls stay
+   readable. The page body stays the solid --bg colour. */
 .topbar {
-  background: var(--glass-strong); border-bottom-color: var(--glass-line);
-  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.2);
-          backdrop-filter: blur(var(--blur)) saturate(1.2);
-}
-
-/* Panels / cards */
-.finding, .callout, .crew-detail, .assessment-result, .cog-stage, .no-video,
-.notice-block, .video-frame.unavailable, .trajectory, .privacy-box, .calc-line {
-  background: var(--glass);
-  -webkit-backdrop-filter: blur(13px) saturate(1.15);
-          backdrop-filter: blur(13px) saturate(1.15);
-}
-
-/* Floating overlays — a touch more opaque so content stays crisp */
-.menu, .toast, .dialog, .dialog-head, .chart-tip {
-  background: var(--glass-strong);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2);
-          backdrop-filter: blur(18px) saturate(1.2);
-}
-.dialog { border-color: var(--glass-line); }
-
-/* Older browsers without backdrop-filter: fall back to the opaque tokens. */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .sidebar, .finding, .callout, .crew-detail, .assessment-result, .cog-stage,
-  .no-video, .notice-block, .video-frame.unavailable, .trajectory, .privacy-box,
-  .calc-line { background: var(--surface); }
-  .topbar, .menu, .toast, .dialog, .dialog-head, .chart-tip { background: var(--surface-2); }
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--bg) 86%, transparent) 0%,
+      color-mix(in srgb, var(--bg) 66%, transparent) 55%,
+      color-mix(in srgb, var(--bg) 52%, transparent) 100%),
+    var(--env-img);
+  background-size: auto, cover;
+  background-position: center, center 42%;
+  background-repeat: no-repeat;
+  border-bottom: 1px solid var(--line-strong);
+  -webkit-backdrop-filter: none;
+          backdrop-filter: none;
 }
 
 /* Crew check-ins */
