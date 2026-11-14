@@ -5,7 +5,7 @@ import { activities, astronauts } from "../data/catalog";
 import { evidenceFor } from "../data/evidence";
 import { Assessment } from "../components/Assessment";
 import { VideoPlayer } from "../components/VideoPlayer";
-import { ExerciseStage } from "../components/ExerciseStage";
+import { BestRecord, ExerciseStage, Streak } from "../components/ExerciseStage";
 import type { StageSave } from "../components/ExerciseStage";
 import { brokenRecords, formatClock, personalBests, sessionStreak } from "../engine/session";
 import { CognitiveTask } from "../components/CognitiveTask";
@@ -122,9 +122,18 @@ function TrainingDetail({ a }: { a: Activity }) {
         <p className="muted">{a.purpose}</p>
       </header>
       {a.kind ? (
-        <ExerciseStage a={a} restHr={astronaut.baseline.heart.value} bests={personalBests(sessions)} streak={sessionStreak(myDays, state.day)} broken={broken} onSave={saveStage} />
+        <ExerciseStage a={a} restHr={astronaut.baseline.heart.value} onSave={saveStage} />
       ) : a.video ? <VideoPlayer video={a.video} onWatched={markWatched} /> : <p className="no-video">No NASA demonstration video is linked for this routine.</p>}
-      <div className="training-cols">
+      {a.kind ? (
+        <div className="training-cols">
+          <div>
+            <BestRecord kind={a.kind} bests={personalBests(sessions)} broken={broken} />
+            <h3 className="h3 spaced">Instructions</h3>
+            <ol className="steps">{(a.instructions ?? []).map((s) => <li key={s}>{s}</li>)}</ol>
+          </div>
+          <Streak streak={sessionStreak(myDays, state.day)} doneToday={myDays.has(state.day)} />
+        </div>
+      ) : <div className="training-cols">
         <div>
           <dl className="qa compact">
             <div><dt>Equipment</dt><dd>{a.equipment}</dd></div>
@@ -144,7 +153,7 @@ function TrainingDetail({ a }: { a: Activity }) {
             ))}
             {checklistDone && <p className="tone ok small"><Check size={14} aria-hidden="true" /> Checklist complete for today</p>}
           </fieldset>
-          {!a.kind && <form className="session-form" onSubmit={record} noValidate>
+          <form className="session-form" onSubmit={record} noValidate>
             <h3 className="h3">Record exercise session</h3>
             <p className="muted small">Log a session you actually performed. Separate from watching the video or ticking the checklist.</p>
             <div className="form-row">
@@ -153,9 +162,9 @@ function TrainingDetail({ a }: { a: Activity }) {
             </div>
             <p id="sess-err" className="error" role="alert">{err}</p>
             <button className="btn btn-primary" type="submit">Record session</button>
-          </form>}
+          </form>
         </div>
-      </div>
+      </div>}
       <section className="training-history" aria-labelledby="hist-h">
         <h3 id="hist-h" className="h3">History for {a.title.toLowerCase()}</h3>
         {history.length + views.length === 0 ? <p className="empty">Nothing recorded for this activity in the current scenario.</p> : (

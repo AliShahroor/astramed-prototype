@@ -206,8 +206,10 @@ test("exercise page: live demo metrics, session bar, muscles, save and best reco
   await expect(page.locator(".xs-metrics")).toContainText(/Sets done\s*[1-9]/, { timeout: 15000 });
   await expect(page.getByRole("progressbar")).not.toHaveAttribute("aria-valuenow", "0");
   await page.getByRole("button", { name: "Save session" }).click();
-  await expect(page.locator(".xs-records")).toContainText("1 day");
-  await expect(page.locator(".xs-records")).not.toContainText("Estimated max–");
+  await expect(page.locator(".streak")).toContainText("1 day");
+  await expect(page.locator(".streak")).toHaveClass(/lit/);
+  await expect(page.locator(".best")).not.toContainText("–Estimated max");
+  await expect(page.getByText("Demonstration checklist")).toHaveCount(0);
   await expect(page.locator(".training-history")).toContainText("sets");
 });
 

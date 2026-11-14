@@ -14,12 +14,9 @@ export interface StageSave { seconds: number; metrics: SessionMetrics }
  * Exercise page: live metrics on the left, the looping clip with a session bar in the middle,
  * worked muscles and personal records on the right. Values come from a simulated demo session.
  */
-export function ExerciseStage({ a, restHr, bests, streak, broken, onSave }: {
+export function ExerciseStage({ a, restHr, onSave }: {
   a: Activity;
   restHr: number;
-  bests: Bests;
-  streak: number;
-  broken: string[];
   onSave: (s: StageSave) => void;
 }) {
   const kind = a.kind as Kind;
@@ -98,17 +95,6 @@ export function ExerciseStage({ a, restHr, bests, streak, broken, onSave }: {
 
   const pct = (demo.sec / plan.maxSec) * 100;
   const minPct = (plan.minSec / plan.maxSec) * 100;
-  const records: [string, string][] = kind === "aerobic" ? [
-    ["Longest session", bests.longestSec ? formatClock(bests.longestSec) : "–"],
-    ["Most time at 70% or more", bests.secAbove70 ? formatClock(bests.secAbove70) : "–"],
-  ] : kind === "strength" ? [
-    ["Estimated max", bests.estMax ? `${fmt(bests.estMax, 1)} kg` : "–"],
-    ["Heaviest set", bests.topLoad ? `${fmt(bests.topLoad)} kg` : "–"],
-    ["Best volume", bests.volume ? `${fmt(bests.volume)} kg` : "–"],
-  ] : [
-    ["Most reps", bests.reps ? fmt(bests.reps) : "–"],
-    ["Longest session", bests.longestSec ? formatClock(bests.longestSec) : "–"],
-  ];
 
   return (
     <section className="xs" aria-label={`${a.title} session`}>
@@ -117,7 +103,7 @@ export function ExerciseStage({ a, restHr, bests, streak, broken, onSave }: {
         <dl>
           {rows.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}
         </dl>
-        <p className="xs-note">Demo values. Heart rate is simulated; a real build would read a wearable. Max heart rate {DEMO_MAX_HR} bpm and body mass {DEMO_BODY_MASS_KG} kg are demo values.</p>
+        <p className="xs-note">Demo values</p>
       </div>
 
       <div className="xs-center">
@@ -142,20 +128,14 @@ export function ExerciseStage({ a, restHr, bests, streak, broken, onSave }: {
         {a.clip ? <Clip clip={a.clip} /> : <div className="xs-noclip">No demonstration clip for this exercise yet.</div>}
       </div>
 
-      {a.muscles && (
-        <div className="xs-body">
-          <p className="xs-eyebrow">Muscles worked</p>
-          <BodyMap primary={a.muscles.primary} secondary={a.muscles.secondary} />
-        </div>
-      )}
+      <div className="xs-side">
+        {a.muscles && (
+          <div className="xs-body">
+            <p className="xs-eyebrow">Muscles worked</p>
+            <BodyMap primary={a.muscles.primary} secondary={a.muscles.secondary} />
+          </div>
+        )}
 
-      <div className="xs-records">
-        <p className="xs-eyebrow">Best record</p>
-        <dl>{records.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
-        {broken.length > 0 && <p className="xs-new" role="status">New best: {broken.join(", ")}</p>}
-        <p className="xs-eyebrow spaced">Streak</p>
-        <p className="xs-streak">{streak} {streak === 1 ? "day" : "days"}</p>
-        <p className="xs-note">Compared only with your own saved sessions. Missed days are never penalised.</p>
       </div>
     </section>
   );
@@ -166,9 +146,47 @@ function Clip({ clip }: { clip: ExerciseClip }) {
     <figure className="xs-clip">
       <video src={`${import.meta.env.BASE_URL}${clip.src}`} autoPlay={!reduceMotion} controls={reduceMotion} muted loop playsInline preload="auto" aria-label={`Looping demonstration: ${clip.shows}`} />
       <figcaption className="video-credit">
-        {clip.credit} · “{clip.title}”{clip.page && <> · <a href={clip.page} target="_blank" rel="noreferrer">Source</a></>}. {clip.shows}{clip.exact ? "" : " Shows the device, not this exact exercise."}
-        {" "}Use does not imply endorsement of ASTRAMED.
+        Reference: {clip.page ? <a href={clip.page} target="_blank" rel="noreferrer">{clip.credit}</a> : clip.credit}{clip.exact ? "" : " · shows the device, not this exact lift"}
       </figcaption>
     </figure>
+  );
+}
+
+/** Personal bests for one exercise, shown as a heading with the numbers side by side. */
+export function BestRecord({ kind, bests, broken }: { kind: Kind; bests: Bests; broken: string[] }) {
+  const items: [string, string][] = kind === "aerobic" ? [
+    ["Longest session", bests.longestSec ? formatClock(bests.longestSec) : "–"],
+    ["Time at 70% or more", bests.secAbove70 ? formatClock(bests.secAbove70) : "–"],
+  ] : kind === "strength" ? [
+    ["Estimated max", bests.estMax ? `${fmt(bests.estMax, 1)} kg` : "–"],
+    ["Heaviest set", bests.topLoad ? `${fmt(bests.topLoad)} kg` : "–"],
+    ["Best volume", bests.volume ? `${fmt(bests.volume)} kg` : "–"],
+  ] : [
+    ["Most reps", bests.reps ? fmt(bests.reps) : "–"],
+    ["Longest session", bests.longestSec ? formatClock(bests.longestSec) : "–"],
+  ];
+  return (
+    <section className="best" aria-labelledby="best-h">
+      <h3 id="best-h" className="h3">Best record</h3>
+      <dl className="best-row">{items.map(([k, v]) => <div key={k}><dd>{v}</dd><dt>{k}</dt></div>)}</dl>
+      {broken.length > 0 && <p className="xs-new" role="status">New best: {broken.join(", ")}</p>}
+    </section>
+  );
+}
+
+/** Days in a row with a saved session. The flame image is lit once today's session is saved. */
+export function Streak({ streak, doneToday }: { streak: number; doneToday: boolean }) {
+  const src = `${import.meta.env.BASE_URL}media/streak/flame-${doneToday ? "lit" : "unlit"}.svg`;
+  return (
+    <section className={`streak${doneToday ? " lit" : ""}`} aria-labelledby="streak-h">
+      <h3 id="streak-h" className="h3">Streak</h3>
+      <div className="streak-row">
+        <img src={src} alt={doneToday ? "Flame lit: session done today" : "Flame not lit: no session yet today"} width={44} height={55} />
+        <div>
+          <p className="streak-days">{streak} {streak === 1 ? "day" : "days"}</p>
+          <p className="muted small">{doneToday ? "Done today" : "Save a session today to light it"}</p>
+        </div>
+      </div>
+    </section>
   );
 }
