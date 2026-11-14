@@ -181,7 +181,7 @@ function Cognitive() {
   const series = selectSeries(mission.rows, astronaut.id, state.scenario, "reaction", state.day, 30);
   const mine = state.assessments.filter((r) => r.astronautId === astronaut.id && r.scenario === state.scenario);
   const cog = state.cognitive.filter((r) => r.astronautId === astronaut.id);
-  const cdsToday = cog.some((r) => r.test === "CDS" && r.day === state.day && r.scenario === state.scenario);
+  const dsstToday = cog.some((r) => r.test === "DSST" && r.day === state.day && r.scenario === state.scenario);
   const save = (result: AssessmentResult) => {
     const reading: Measurement = {
       id: result.id, astronautId: astronaut.id, scenario: state.scenario, indicator: "reaction", unit: "ms", value: Number(result.median.toFixed(1)), day: state.day,
@@ -217,9 +217,11 @@ function Cognitive() {
     <section aria-labelledby="cog-h">
       <div className="section-head"><h2 id="cog-h" className="h2">Cognitive assessments</h2><button className="btn btn-link sm" onClick={() => setActive("RT")}>Reaction time only</button></div>
       <p className="muted measure">
-        Five short tasks modelled on the structure of NASA’s WinSCAT battery, plus a simple reaction-time test. These are Code Blue browser re-creations,
-        not WinSCAT: they have no normative data and are not validated. Each result is compared only with your own first {BASELINE_SESSIONS} sessions.{" "}
-        <button className="btn btn-link inline" onClick={() => openEvidence("winscat")}>About WinSCAT</button>
+        Five short cognitive tasks, plus a simple reaction-time test. Digit-Symbol Substitution, Fractal 2-Back and Visual Object Learning re-create the
+        NASA Cognition battery tasks (NASA/TM-20205008023); Mathematical Processing and the delayed code-substitution recall follow the WinSCAT subtests.
+        These are Code Blue browser re-creations with no normative data, not validated. Each result is compared only with your own first {BASELINE_SESSIONS} sessions.{" "}
+        <button className="btn btn-link inline" onClick={() => openEvidence("cognition")}>About the Cognition battery</button> ·{" "}
+        <button className="btn btn-link inline" onClick={() => openEvidence("winscat")}>WinSCAT</button>
       </p>
       <div className="table-wrap" role="region" aria-label="Cognitive tests" tabIndex={0}>
         <table className="tests">
@@ -236,7 +238,7 @@ function Cognitive() {
               const r = last(t);
               const b = personalBaseline(state.cognitive, t, astronaut.id);
               const scored = SCORED_TESTS.includes(t);
-              const locked = t === "CDD" && !cdsToday;
+              const locked = t === "CDD" && !dsstToday;
               const delta = r?.throughput != null && b.throughput ? ((r.throughput - b.throughput) / b.throughput) * 100 : null;
               return (
                 <tr key={t}>
@@ -245,8 +247,8 @@ function Cognitive() {
                   <td>{r ? <>{r.accuracy.toFixed(0)}% correct · {r.throughput?.toFixed(1) ?? "—"}/min<small className="muted block">Day {r.day}</small></> : <span className="muted">Not run</span>}</td>
                   <td>{!scored ? <span className="muted">Learning step, not compared</span> : b.ready ? <>{b.throughput!.toFixed(1)}/min{delta !== null && <small className={`block ${delta <= -10 ? "warn-text" : "muted"}`}>Latest {delta >= 0 ? "+" : ""}{delta.toFixed(0)}%</small>}</> : <span className="muted">Building: {b.sessions} of {BASELINE_SESSIONS}</span>}</td>
                   <td className="right">
-                    <button className="btn btn-secondary sm" disabled={locked} title={locked ? "Run Code Substitution first today" : undefined} onClick={() => setActive(t)}>Start</button>
-                    {locked && <small className="muted block">Needs CDS today</small>}
+                    <button className="btn btn-secondary sm" disabled={locked} title={locked ? "Run the Digit-Symbol task first today" : undefined} onClick={() => setActive(t)}>Start</button>
+                    {locked && <small className="muted block">Needs DSST today</small>}
                   </td>
                 </tr>
               );
@@ -254,7 +256,7 @@ function Cognitive() {
           </tbody>
         </table>
       </div>
-      <p className="muted small">Order: CDS, CPT, MTH, MTS, then CDD (delayed recall of the CDS key). Throughput = estimated correct responses per minute. CPT also counts lapses (no response within 700 ms). A drop of 10% or more from your baseline is highlighted for your attention only; it is not a clinical threshold and does not create a finding.</p>
+      <p className="muted small">Order: DSST, F2B, MTH, VOLT, then CDD (delayed recall of the DSST legend). Throughput = estimated correct responses per minute. F2B also counts missed two-back targets. A drop of 10% or more from your baseline is highlighted for your attention only; it is not a clinical threshold and does not create a finding.</p>
 
       <div className="split">
         <div>

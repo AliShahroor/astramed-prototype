@@ -680,3 +680,23 @@ label.choice:focus-within { outline: 2px solid var(--info); outline-offset: 2px;
 @keyframes enter { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 .page, .entry-main { animation: enter .22s ease-out both; }
 .menu { animation: enter .14s ease-out both; }
+
+/* ───────── Cognitive task re-creations (DSST keypad, F2B, VOLT) ───────── */
+.dsst-symbol { font-size: 76px; line-height: 1; font-weight: 500; }
+.cog-timer { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--text); }
+.keypad { display: grid; grid-template-columns: repeat(3, 56px); gap: var(--s2); justify-content: center; margin-top: var(--s4); }
+.keypad button { height: 52px; font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; border: 1px solid var(--line-strong); background: var(--surface-2); color: var(--text); border-radius: var(--radius-sm); }
+.keypad button:hover { background: var(--surface-3); border-color: #43575f; }
+.keypad button:active { background: var(--accent-soft); border-color: var(--accent); }
+.fractal-stage, .volt-stage { min-height: 268px; }
+.fractal-stage svg, .volt-stage svg { display: block; }
+.volt-rating { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s2); margin-top: var(--s4); }
+.volt-rating .btn { justify-content: center; }
+.cog-hint { color: var(--text-3); font-size: 13px; margin-top: var(--s3); }
+.cog-choices:has(> .btn:only-child) { grid-template-columns: minmax(0, 360px); justify-content: center; }
+.btn.is-on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+@media (max-width: 600px) {
+  .volt-rating { grid-template-columns: 1fr 1fr; }
+  .keypad { grid-template-columns: repeat(3, 52px); }
+  .dsst-symbol { font-size: 60px; }
+}

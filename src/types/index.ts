@@ -129,7 +129,7 @@ export interface AssessmentResult {
   anticipatory?: number;
   median: number;
 }
-export type CogTest = "CDS" | "CDD" | "MTS" | "MTH" | "CPT";
+export type CogTest = "DSST" | "F2B" | "VOLT" | "MTH" | "CDD";
 export interface CogTrial {
   /** null = no response before the trial timed out */
   correct: boolean | null;
@@ -149,7 +149,7 @@ export interface CogResult {
   accuracy: number;
   medianRt: number | null;
   throughput: number | null;
-  /** CPT only: responses slower than 700 ms or missing */
+  /** Fractal 2-Back only: missed two-back targets */
   lapses?: number;
 }
 export interface CheckInEntry {
