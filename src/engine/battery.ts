@@ -7,7 +7,7 @@ import { median } from "./monitoring";
  * Task structure and parameters follow the published NASA descriptions:
  *   • Digit-Symbol Substitution (DSST), Fractal 2-Back (F2B) and Visual Object Learning (VOLT)
  *     are the Cognition-battery tasks described in NASA/TM-20205008023, "The Cognition and Fine
- *     Motor Skills Test Batteries" (task descriptions, pp. 11–12).
+ *     Motor Skills Test Batteries" (task descriptions, pp. 11-12).
  *   • Mathematical Processing (MTH) and Code Substitution Delayed (CDD) have no Cognition-battery
  *     equivalent; they follow the WinSCAT subtest descriptions.
  * Results are compared only with the same astronaut's own earlier sessions.
@@ -17,7 +17,7 @@ export const BASELINE_SESSIONS = 3;
 export const LAPSE_MS = 700;
 export const TRIAL_TIMEOUT_MS = 6000; // Mathematical Processing per-trial timeout
 
-/** Nine symbols for the DSST / CDD legend (NASA DSST uses a nine symbol–digit legend). */
+/** Nine symbols for the DSST / CDD legend (NASA DSST uses a nine symbol-digit legend). */
 export const SYMBOLS = ["▲", "●", "■", "◆", "★", "✚", "▼", "◀", "▶"];
 
 // Task parameters, from NASA/TM-20205008023 unless noted.
@@ -47,7 +47,7 @@ export interface TestInfo {
 
 export const TESTS: Record<CogTest, TestInfo> = {
   DSST: {
-    id: "DSST", name: "Digit-Symbol Substitution", domain: "Visual scanning, eye–hand coordination",
+    id: "DSST", name: "Digit-Symbol Substitution", domain: "Visual scanning, eye-hand coordination",
     paradigm: "dsst", source: "NASA/TM-20205008023", evidenceId: "cognition",
     task: "A legend pairs nine symbols with digits. Test symbols appear one at a time at the top; press the number key that goes with each symbol. The task runs for about 90 seconds.",
   },
@@ -69,11 +69,11 @@ export const TESTS: Record<CogTest, TestInfo> = {
   CDD: {
     id: "CDD", name: "Code Substitution Delayed", domain: "Delayed recall memory",
     paradigm: "dsst", source: "WinSCAT; DSST legend recalled from memory", evidenceId: "winscat",
-    task: "The symbol–digit legend from the Digit-Symbol task is now hidden. From memory, press the digit that went with each symbol.",
+    task: "The symbol-digit legend from the Digit-Symbol task is now hidden. From memory, press the digit that went with each symbol.",
   },
 };
 
-/** DSST teaches the symbol–digit legend that CDD recalls after the other tasks, so CDD is always last. */
+/** DSST teaches the symbol-digit legend that CDD recalls after the other tasks, so CDD is always last. */
 export const ORDER: CogTest[] = ["DSST", "F2B", "MTH", "VOLT", "CDD"];
 /** DSST is the learning step for CDD and is not compared with a baseline. */
 export const SCORED_TESTS: CogTest[] = ["F2B", "MTH", "VOLT", "CDD"];

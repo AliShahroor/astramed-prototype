@@ -112,7 +112,7 @@ export const evidence: Evidence[] = [
     section: "Cognition battery sub-test descriptions",
     type: "research",
     statement:
-      "NASA’s Cognition battery is a 10-test battery designed for the astronaut population and validated on the ground and the ISS. Three of its tasks are re-created here: the Digit-Symbol Substitution Test (a nine symbol–digit legend; test symbols are typed with the number keys for about 90 seconds), the Fractal 2-Back (62 fractal patterns at 1.75 s each, spacebar on a two-back match, 15 of which are matches), and the Visual Object Learning Test (study 10 wireframe objects at 5 s each, then rate 20 objects definitely/probably yes or no).",
+      "NASA’s Cognition battery is a 10-test battery designed for the astronaut population and validated on the ground and the ISS. Three of its tasks are re-created here: the Digit-Symbol Substitution Test (a nine symbol-digit legend; test symbols are typed with the number keys for about 90 seconds), the Fractal 2-Back (62 fractal patterns at 1.75 s each, spacebar on a two-back match, 15 of which are matches), and the Visual Object Learning Test (study 10 wireframe objects at 5 s each, then rate 20 objects definitely/probably yes or no).",
     limitations:
       "ASTRAMED’s versions use placeholder fractals and objects, different stimulus sets, and no normative data; they are demonstrations, not the validated Cognition battery. Results are compared only with the user’s own first sessions.",
     verified: true,

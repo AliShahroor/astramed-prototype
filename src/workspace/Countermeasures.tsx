@@ -244,7 +244,7 @@ function Cognitive() {
                 <tr key={t}>
                   <th scope="row">{TESTS[t].name} <span className="mono muted">{t}</span></th>
                   <td className="muted">{TESTS[t].domain}</td>
-                  <td>{r ? <>{r.accuracy.toFixed(0)}% correct · {r.throughput?.toFixed(1) ?? "—"}/min<small className="muted block">Day {r.day}</small></> : <span className="muted">Not run</span>}</td>
+                  <td>{r ? <>{r.accuracy.toFixed(0)}% correct · {r.throughput?.toFixed(1) ?? "-"}/min<small className="muted block">Day {r.day}</small></> : <span className="muted">Not run</span>}</td>
                   <td>{!scored ? <span className="muted">Learning step, not compared</span> : b.ready ? <>{b.throughput!.toFixed(1)}/min{delta !== null && <small className={`block ${delta <= -10 ? "warn-text" : "muted"}`}>Latest {delta >= 0 ? "+" : ""}{delta.toFixed(0)}%</small>}</> : <span className="muted">Building: {b.sessions} of {BASELINE_SESSIONS}</span>}</td>
                   <td className="right">
                     <button className="btn btn-secondary sm" disabled={locked} title={locked ? "Run the Digit-Symbol task first today" : undefined} onClick={() => setActive(t)}>Start</button>
@@ -281,7 +281,7 @@ function Cognitive() {
           {cog.length === 0 ? <p className="empty">No battery results saved for {astronaut.name} yet.</p> : (
             <table className="simple">
               <thead><tr><th scope="col">Test</th><th scope="col">Day</th><th scope="col">Correct</th><th scope="col">Median RT</th><th scope="col">Throughput</th></tr></thead>
-              <tbody>{[...cog].reverse().slice(0, 10).map((r) => <tr key={r.id}><td className="mono">{r.test}</td><td>{r.day}</td><td>{r.correct}/{r.total}</td><td>{r.medianRt === null ? "—" : `${Math.round(r.medianRt)} ms`}</td><td>{r.throughput?.toFixed(1) ?? "—"}/min</td></tr>)}</tbody>
+              <tbody>{[...cog].reverse().slice(0, 10).map((r) => <tr key={r.id}><td className="mono">{r.test}</td><td>{r.day}</td><td>{r.correct}/{r.total}</td><td>{r.medianRt === null ? "-" : `${Math.round(r.medianRt)} ms`}</td><td>{r.throughput?.toFixed(1) ?? "-"}/min</td></tr>)}</tbody>
             </table>
           )}
         </div>

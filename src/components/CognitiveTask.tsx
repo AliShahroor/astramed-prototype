@@ -69,10 +69,10 @@ function DsstRunner({ seed, onDone, test, legend, cdKey }: RunnerProps & { test:
         {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => <button key={d} onClick={() => press(d)}>{d}</button>)}
       </div>
       {legend ? (
-        <div className="code-key" aria-label="Symbol–digit legend">
+        <div className="code-key" aria-label="Symbol-digit legend">
           {SYMBOLS.map((s) => <span key={s}><b aria-hidden="true">{s}</b><i>{cdKey[s]}</i></span>)}
         </div>
-      ) : <p className="cog-hint">The legend is hidden — type the digit each symbol was paired with, from memory.</p>}
+      ) : <p className="cog-hint">The legend is hidden. Type the digit each symbol was paired with, from memory.</p>}
     </>
   );
 }
@@ -174,7 +174,7 @@ function VoltRunner({ seed, onDone }: RunnerProps) {
   if (phase === "study") {
     return (
       <>
-        <p className="muted small" aria-live="polite">Studying {i + 1} of {sets.study.length} — memorize this object</p>
+        <p className="muted small" aria-live="polite">Studying {i + 1} of {sets.study.length}: memorize this object</p>
         <div className="cog-stage volt-stage"><WireObject id={sets.study[i]} size={150} /></div>
         <p className="cog-hint">Each object shows for 5 seconds; the test starts automatically. There is no practice.</p>
       </>
@@ -182,7 +182,7 @@ function VoltRunner({ seed, onDone }: RunnerProps) {
   }
   return (
     <>
-      <p className="muted small" aria-live="polite">Test {i + 1} of {sets.test.length} — was this object in the studied set?</p>
+      <p className="muted small" aria-live="polite">Test {i + 1} of {sets.test.length}: was this object in the studied set?</p>
       <div className="cog-stage volt-stage"><WireObject id={sets.test[i].obj} size={150} /></div>
       <div className="volt-rating" role="group" aria-label="Rate recognition">
         <button className="btn btn-secondary" onClick={() => rate(true)}>Definitely yes <kbd>1</kbd></button>
@@ -253,10 +253,10 @@ function ResultCard({ test, trials, result, saved, onSave, onAgain }: {
     const hits = trials.filter((t) => t.correct === true && t.rtMs > 0).length;
     const misses = trials.filter((t) => t.correct === false && t.rtMs === 0).length;
     const fa = trials.filter((t) => t.correct === false && t.rtMs > 0).length;
-    detail = `Hits ${hits} of 15 · misses ${misses} · false alarms ${fa} · median hit RT ${result.medianRt === null ? "—" : Math.round(result.medianRt) + " ms"}`;
+    detail = `Hits ${hits} of 15 · misses ${misses} · false alarms ${fa} · median hit RT ${result.medianRt === null ? "-" : Math.round(result.medianRt) + " ms"}`;
   } else {
     const timedOut = trials.filter((t) => t.correct === null).length;
-    detail = `Median response time ${result.medianRt === null ? "—" : Math.round(result.medianRt) + " ms"} · throughput ${result.throughput === null ? "—" : result.throughput.toFixed(1) + "/min"}${timedOut ? ` · ${timedOut} timed out` : ""}`;
+    detail = `Median response time ${result.medianRt === null ? "-" : Math.round(result.medianRt) + " ms"} · throughput ${result.throughput === null ? "-" : result.throughput.toFixed(1) + "/min"}${timedOut ? ` · ${timedOut} timed out` : ""}`;
   }
   return (
     <div className="assessment-result">
@@ -293,7 +293,7 @@ export function CognitiveTask({ test, astronautId, scenario, day, onSave, onExit
       {!started && !done && (
         <div className="cog-intro">
           <p>{info.task}</p>
-          <p className="cog-hint">Modelled on {info.source}. Browser re-creation for demonstration — not the validated instrument, and not scored against normative data.</p>
+          <p className="cog-hint">Modelled on {info.source}. Browser re-creation for demonstration, not the validated instrument, and not scored against normative data.</p>
           <div className="actions"><button className="btn btn-primary" onClick={() => setStarted(true)}><Play size={16} aria-hidden="true" /> Start</button></div>
         </div>
       )}
