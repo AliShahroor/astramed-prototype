@@ -33,6 +33,7 @@ export interface Astronaut {
   name: string;
   role: string;
   initials: string;
+  designation: string;
   history: string;
   baseline: Record<Indicator, Baseline>;
   share: boolean;
@@ -125,6 +126,7 @@ export interface AssessmentResult {
   trials: number[];
   falseStarts: number;
   misses: number;
+  anticipatory?: number;
   median: number;
 }
 export interface CrewNotification {
@@ -163,4 +165,11 @@ export interface AppState {
   notifications: CrewNotification[];
   checkins: Record<string, string>;
   voice: boolean;
+  session: Session;
+}
+export interface Session {
+  /** a demo profile has been chosen at least once */
+  entered: boolean;
+  /** profiles that have seen the mission briefing */
+  briefed: string[];
 }
