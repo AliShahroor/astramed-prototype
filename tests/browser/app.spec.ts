@@ -171,6 +171,7 @@ test("form validation, keyboard dialog and reset", async ({ page }) => {
   await expect(page.getByLabel("Current astronaut")).toHaveValue("alex");
 });
 test("responsive layouts at 1440, 1280 and 390 pixels", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
   for (const width of [1440, 1280, 390]) {
     await page.setViewportSize({ width, height: 900 });
     await expect(
