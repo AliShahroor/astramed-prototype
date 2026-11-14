@@ -181,9 +181,9 @@ test("daily briefing: findings, changes, crew, tasks", async ({ page }) => {
 
 test("physical training: video, checklist and session are tracked separately", async ({ page }) => {
   await page.goto("./#/countermeasures/physical");
-  await expect(page.getByRole("heading", { name: "Resistance exercise", level: 2 })).toBeVisible();
-  await expect(page.locator(".video-credit")).toContainText("NASA Johnson Space Center");
-  await page.locator(".training-item", { hasText: "Mobility check" }).click();
+  await expect(page.getByRole("heading", { name: "Treadmill aerobic exercise", level: 2 })).toBeVisible();
+  await expect(page.locator(".video-credit")).toContainText("Canadian Space Agency");
+  await page.locator(".training-item", { hasText: "Mobility" }).click();
   for (const box of await page.locator(".check-row input").all()) await box.check();
   await expect(page.getByText("Checklist complete for today")).toBeVisible();
   await page.getByLabel("Duration (min)").fill("0");
@@ -196,6 +196,19 @@ test("physical training: video, checklist and session are tracked separately", a
   await page.getByRole("link", { name: "History" }).click();
   await expect(page.locator(".stat-row")).toContainText("Sessions recorded1");
   await expect(page.locator(".stat-row")).toContainText("Exercise minutes12");
+});
+
+test("exercise page: live demo metrics, session bar, muscles, save and best record", async ({ page }) => {
+  await page.goto("./#/countermeasures/physical");
+  await page.locator(".training-item", { hasText: "Squat" }).click();
+  await expect(page.locator(".xs-body")).toContainText("Quadriceps");
+  await page.getByRole("button", { name: "60×" }).click();
+  await expect(page.locator(".xs-metrics")).toContainText(/Sets done\s*[1-9]/, { timeout: 15000 });
+  await expect(page.getByRole("progressbar")).not.toHaveAttribute("aria-valuenow", "0");
+  await page.getByRole("button", { name: "Save session" }).click();
+  await expect(page.locator(".xs-records")).toContainText("1 day");
+  await expect(page.locator(".xs-records")).not.toContainText("Estimated max–");
+  await expect(page.locator(".training-history")).toContainText("sets");
 });
 
 test("real assessment: early trial excluded, five valid trials saved to health", async ({ page }) => {
@@ -303,12 +316,9 @@ test("offline: workspace, evidence and assessment work; uncached video shows una
   await expect(page.getByRole("dialog")).toContainText("at most 3 mmHg");
   await page.getByRole("button", { name: "Close dialog" }).click();
   await nav(page, "Countermeasures").click();
-  await expect(page.getByText("Video unavailable")).toBeVisible();
-  await expect(page.getByText("not stored for offline use")).toBeVisible();
-  await page.locator(".training-item", { hasText: "Cycle ergometer" }).click();
-  await expect(page.locator(".video-credit")).toContainText("available offline");
-  await page.getByRole("button", { name: /Play video/ }).click();
-  await expect.poll(() => page.evaluate(() => document.querySelector("video")?.readyState ?? 0), { timeout: 10000 }).toBeGreaterThanOrEqual(2);
+  await page.locator(".training-item", { hasText: "Cycle" }).click();
+  await expect(page.locator(".video-credit")).toContainText("Canadian Space Agency");
+  await expect.poll(() => page.evaluate(() => (document.querySelector(".xs-clip video") as HTMLVideoElement | null)?.readyState ?? 0), { timeout: 10000 }).toBeGreaterThanOrEqual(2);
   await page.getByRole("link", { name: "Cognitive assessment" }).click();
   await page.getByRole("button", { name: "Reaction time only" }).click();
   await page.getByRole("button", { name: "Start practice" }).click();

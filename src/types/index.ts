@@ -201,7 +201,34 @@ export interface Activity {
   instructions?: string[];
   evidenceId?: string;
   video?: TrainingVideo;
+  /** short device name shown next to the exercise name */
+  device?: string;
+  /** muscles the exercise mainly works, and those that help */
+  muscles?: { primary: Muscle[]; secondary: Muscle[] };
+  /** short looping snippet shown on the exercise stage, like a GIF */
+  clip?: ExerciseClip;
+  /** how a session is measured: aerobic (heart-rate based), strength (sets of load × reps), flywheel (reps only) */
+  kind?: "aerobic" | "strength" | "flywheel";
+  /** demo load in kg for lifting exercises */
+  demoLoad?: number;
+  /** equipment settings for aerobic work, e.g. speed or power */
+  settings?: { id: string; label: string; unit: string; initial: number }[];
 }
+export type Muscle = "chest" | "shoulders" | "biceps" | "triceps" | "forearms" | "abs" | "traps" | "lats" | "lowerback" | "glutes" | "quads" | "hamstrings" | "calves";
+export interface ExerciseClip {
+  src: string;
+  title: string;
+  credit: string;
+  shows: string;
+  page?: string;
+  /** false when the clip shows the device but not this exact exercise */
+  exact: boolean;
+}
+/** Numbers saved with a recorded session. Heart rate is simulated in this prototype. */
+export type SessionMetrics = Partial<Record<
+  "avgHr" | "peakHr" | "secAbove70" | "secAbove90" | "sets" | "reps" | "volume" | "topLoad" | "estMax" | "loadRatio" | "speed" | "harness" | "power" | "cadence",
+  number
+>>;
 export interface Completion {
   astronautId: string;
   activityId: string;
@@ -211,7 +238,9 @@ export interface Completion {
   /** session = an exercise session the astronaut recorded; checklist = demonstration checklist finished */
   kind?: "session" | "checklist";
   minutes?: number;
+  seconds?: number;
   note?: string;
+  metrics?: SessionMetrics;
 }
 export interface VideoView {
   astronautId: string;

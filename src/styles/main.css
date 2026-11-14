@@ -736,3 +736,72 @@ label.choice { text-align: center; padding: var(--s2) var(--s2); font-size: 14px
 .report { margin: 0; padding: var(--s4); background: var(--surface-2); border-radius: var(--radius-sm); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; line-height: 1.6; white-space: pre-wrap; max-height: 340px; overflow-y: auto; color: var(--text); }
 .queue .section-head { margin-bottom: var(--s3); }
 .queue .section-head .h2 { margin-bottom: 0; }
+
+
+/* ───────── Exercise page: tabs, metrics | clip | muscles | records ───────── */
+.training { grid-template-columns: minmax(0, 1fr); gap: var(--s5); }
+.ex-tabs { display: flex; gap: var(--s5); overflow-x: auto; border-bottom: 1px solid var(--line); scrollbar-width: thin; }
+.ex-tabs .training-item { width: auto; flex: none; display: inline-flex; align-items: center; gap: 6px; padding: var(--s2) 0 var(--s3); border: 0; border-radius: 0; background: none; color: var(--text-2); font-weight: 500; white-space: nowrap; box-shadow: none; }
+.ex-tabs .training-item:hover { background: none; color: var(--text); }
+.ex-tabs .training-item[aria-current] { color: var(--text); background: none; box-shadow: inset 0 -2px 0 var(--accent); }
+.video, .training-head, .no-video { max-width: none; }
+
+.xs { display: grid; grid-template-columns: 220px minmax(0, 1fr) 200px 190px; gap: var(--s6); align-items: start; padding-bottom: var(--s5); border-bottom: 1px solid var(--line); }
+.xs-eyebrow { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: var(--s2); }
+.xs-eyebrow.spaced { margin-top: var(--s5); }
+.xs dl > div { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s3); padding: 9px 0; border-bottom: 1px solid var(--line); }
+.xs dt { color: var(--text-2); font-size: 14px; }
+.xs dd { font-variant-numeric: tabular-nums; font-weight: 600; text-align: right; white-space: nowrap; }
+.xs-metrics dd { font-size: 16px; }
+.xs-note { margin-top: var(--s3); font-size: 12px; line-height: 1.5; color: var(--text-3); }
+
+.xs-bar { margin-bottom: var(--s3); }
+.xs-bar-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s3); flex-wrap: wrap; margin-bottom: 6px; }
+.xs-clock { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.xs-track { position: relative; height: 6px; border-radius: 3px; background: var(--surface-3); overflow: hidden; }
+.xs-fill { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 3px; transition: width .2s linear; }
+.xs-zone { position: absolute; top: 0; bottom: 0; right: 0; background: var(--accent-soft); }
+.xs-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s4); margin-top: var(--s2); }
+.xs-speed { display: inline-flex; gap: var(--s2); }
+.xs-speed .btn[aria-pressed="true"] { color: var(--text); text-decoration: underline; text-underline-offset: 4px; }
+.xs-save { margin-left: auto; }
+.xs-clip { margin: 0; }
+.xs-clip video { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--radius); background: #000; }
+.xs-noclip { display: grid; place-items: center; aspect-ratio: 16 / 9; color: var(--text-3); font-size: 14px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+
+.xs-body .bodymap { padding: 0; background: none; border: 0; grid-template-columns: minmax(0, 1fr); gap: var(--s3); }
+.xs-body .bm-legend dd { font-size: 14px; }
+.xs-records dd { font-size: 15px; }
+.xs-streak { font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.xs-new { margin-top: var(--s2); font-size: 13px; color: var(--warn); }
+
+@media (max-width: 1380px) {
+  .xs { grid-template-columns: 210px minmax(0, 1fr) 190px; }
+  .xs-records { grid-column: 3; }
+}
+@media (max-width: 1080px) {
+  .xs { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .xs-center { grid-column: 1 / -1; grid-row: 1; }
+  .xs-records { grid-column: auto; }
+}
+@media (max-width: 640px) {
+  .xs { grid-template-columns: minmax(0, 1fr); gap: var(--s5); }
+}
+
+/* Muscle map (original drawing) */
+.bodymap { display: grid; gap: var(--s3); }
+.bm-figures { display: flex; gap: var(--s3); }
+.bm-figure { margin: 0; display: grid; justify-items: center; gap: 2px; }
+.bm-figure svg { width: 84px; height: 172px; }
+.bm-figure figcaption { font-size: 11px; color: var(--text-3); }
+.bm-base { fill: var(--surface-3); }
+.bm-muscle { fill: var(--surface-3); stroke: var(--line-strong); stroke-width: .6; }
+.bm-primary { fill: var(--danger); stroke: none; }
+.bm-secondary { fill: var(--danger); fill-opacity: .4; stroke: none; }
+.bm-legend { display: grid; gap: var(--s2); }
+.bm-legend > div { display: grid; gap: 2px; padding: 0; border: 0; }
+.bm-legend dt { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-3); }
+.bm-legend dd { font-weight: 500; text-align: left; white-space: normal; color: var(--text); }
+.bm-key { display: inline-block; width: 10px; height: 10px; border-radius: 2px; }
+.bm-key.bm-primary { background: var(--danger); }
+.bm-key.bm-secondary { background: var(--danger); opacity: .4; }

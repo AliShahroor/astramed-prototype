@@ -248,6 +248,10 @@ function makeBaseline(overrides: Partial<Record<Indicator, number>>) {
   ) as Astronaut["baseline"];
 }
 const NASA_HRP = "https://www.nasa.gov/hrp/hrp-videos/";
+const NASA_EX = "https://images.nasa.gov/details/jsc2025m000002_How_Do_Astronauts_Exercise_in_Space_250106-MP4";
+const CSA_TITLE = "Physical activity in space";
+const csaClip = (src: string, shows: string) => ({ src: `media/clips/${src}.mp4`, title: CSA_TITLE, credit: "Canadian Space Agency", shows, exact: true });
+const nasaClip = (src: string, shows: string, exact = true) => ({ src: `media/clips/${src}.mp4`, title: "How Do Astronauts Exercise in Space?", credit: "NASA", shows, page: NASA_EX, exact });
 const ECLIPS = "https://assets.science.nasa.gov/content/dam/science/cds/eclips/assets/videos";
 /**
  * Training library. Videos are NASA educational footage, embedded with attribution (verified 14 Nov 2026):
@@ -256,13 +260,83 @@ const ECLIPS = "https://assets.science.nasa.gov/content/dam/science/cds/eclips/a
  */
 export const activities: Activity[] = [
   {
-    id: "resistance",
-    title: "Resistance exercise",
+    id: "squat",
+    demoLoad: 80,
+    device: "ARED",
+    muscles: { primary: ["quads", "glutes"], secondary: ["hamstrings", "lowerback", "abs"] },
+    clip: { src: "media/clips/squat.mp4", title: "Train Like an Astronaut – ARED", credit: "NASA", shows: "Astronaut Mike Hopkins squats on a ground version of ARED.", page: "https://www.nasa.gov/video-detail/train-like-an-astronaut-ared/", exact: true },
+    title: "Squat",
     category: "Resistance",
+    kind: "strength",
     duration: "Part of the roughly two-hour daily ISS exercise period",
     equipment: "Advanced Resistive Exercise Device (ARED): vacuum cylinders provide adjustable load in microgravity",
-    purpose: "Loads muscle and bone, which lose mass when gravity no longer loads them through the day.",
-    description: "Squats, deadlifts and other lifts on a vacuum-cylinder resistance device.",
+    purpose: "Loads the legs, hips and spine, where bone and muscle are lost fastest without gravity.",
+    description: "Back, single-leg or sumo squats on the lifting machine.",
+    instructions: [
+      "Follow the loads and exercises in your mission exercise plan.",
+      "Secure the harness and foot restraints before loading the device.",
+      "Keep a controlled tempo through the full range of motion.",
+    ],
+    steps: ["Review today’s planned exercises and loads", "Check harness and foot restraints", "Confirm device load setting with the plan", "Record any pain, dizziness or equipment issue"],
+    evidenceId: "exercise",
+  },
+  {
+    id: "deadlift",
+    demoLoad: 90,
+    device: "ARED",
+    muscles: { primary: ["hamstrings", "glutes", "lowerback"], secondary: ["quads", "traps", "forearms"] },
+    clip: nasaClip("ared", "An astronaut lifts on ARED aboard the ISS.", false),
+    title: "Deadlift",
+    category: "Resistance",
+    kind: "strength",
+    duration: "Part of the roughly two-hour daily ISS exercise period",
+    equipment: "Advanced Resistive Exercise Device (ARED): vacuum cylinders provide adjustable load in microgravity",
+    purpose: "Loads the back, hips and legs through a full lift from the floor position.",
+    description: "Deadlifts, including Romanian and sumo variations.",
+    instructions: [
+      "Follow the loads and exercises in your mission exercise plan.",
+      "Secure the harness and foot restraints before loading the device.",
+      "Keep a controlled tempo through the full range of motion.",
+    ],
+    steps: ["Review today’s planned exercises and loads", "Check harness and foot restraints", "Confirm device load setting with the plan", "Record any pain, dizziness or equipment issue"],
+    evidenceId: "exercise",
+    video: { kind: "youtube", id: "YxImeOomkUk", title: "Working Out Aboard the Space Station", credit: "NASA Johnson Space Center", duration: "4:41", captions: "English captions (YouTube)", shows: "Expedition 26 Commander Scott Kelly demonstrates ARED on the ISS.", page: NASA_HRP },
+  },
+  {
+    id: "heelraise",
+    demoLoad: 70,
+    device: "ARED",
+    muscles: { primary: ["calves"], secondary: [] },
+    clip: nasaClip("ared", "An astronaut lifts on ARED aboard the ISS.", false),
+    title: "Heel raise",
+    category: "Resistance",
+    kind: "strength",
+    duration: "Part of the roughly two-hour daily ISS exercise period",
+    equipment: "Advanced Resistive Exercise Device (ARED): vacuum cylinders provide adjustable load in microgravity",
+    purpose: "Loads the calf muscles and ankles, which weaken quickly in microgravity.",
+    description: "Heel raises, including single-leg, on the lifting machine.",
+    instructions: [
+      "Follow the loads and exercises in your mission exercise plan.",
+      "Secure the harness and foot restraints before loading the device.",
+      "Keep a controlled tempo through the full range of motion.",
+    ],
+    steps: ["Review today’s planned exercises and loads", "Check harness and foot restraints", "Confirm device load setting with the plan", "Record any pain, dizziness or equipment issue"],
+    evidenceId: "exercise",
+    video: { kind: "youtube", id: "YxImeOomkUk", title: "Working Out Aboard the Space Station", credit: "NASA Johnson Space Center", duration: "4:41", captions: "English captions (YouTube)", shows: "Expedition 26 Commander Scott Kelly demonstrates ARED on the ISS.", page: NASA_HRP },
+  },
+  {
+    id: "bench",
+    demoLoad: 50,
+    device: "ARED",
+    muscles: { primary: ["chest"], secondary: ["shoulders", "triceps"] },
+    clip: nasaClip("bench", "An astronaut performs a bench press on ARED aboard the ISS."),
+    title: "Bench press",
+    category: "Resistance",
+    kind: "strength",
+    duration: "Part of the roughly two-hour daily ISS exercise period",
+    equipment: "Advanced Resistive Exercise Device (ARED): vacuum cylinders provide adjustable load in microgravity",
+    purpose: "Loads the chest, shoulders and arms.",
+    description: "Bench press on the lifting machine.",
     instructions: [
       "Follow the loads and exercises in your mission exercise plan.",
       "Secure the harness and foot restraints before loading the device.",
@@ -274,8 +348,13 @@ export const activities: Activity[] = [
   },
   {
     id: "treadmill",
+    device: "T2 treadmill",
+    muscles: { primary: ["quads", "glutes", "calves"], secondary: ["hamstrings", "abs"] },
+    clip: csaClip("treadmill", "An astronaut runs on the ISS treadmill, held down by a harness."),
     title: "Treadmill aerobic exercise",
     category: "Aerobic",
+    kind: "aerobic",
+    settings: [{ id: "speed", label: "Speed", unit: "km/h", initial: 8 }, { id: "harness", label: "Harness load", unit: "% body weight", initial: 70 }],
     duration: "Scheduled within the daily exercise period",
     equipment: "Treadmill with bungee or harness system that pulls the runner toward the belt (current ISS unit: T2/COLBERT)",
     purpose: "Aerobic conditioning with impact loading through the legs and spine.",
@@ -291,8 +370,13 @@ export const activities: Activity[] = [
   },
   {
     id: "cycle",
+    device: "CEVIS cycle",
+    muscles: { primary: ["quads", "glutes"], secondary: ["hamstrings", "calves"] },
+    clip: csaClip("cycle", "An astronaut pedals the ISS cycle ergometer."),
     title: "Cycle ergometer training",
     category: "Aerobic",
+    kind: "aerobic",
+    settings: [{ id: "power", label: "Power", unit: "W", initial: 150 }, { id: "cadence", label: "Cadence", unit: "rpm", initial: 80 }],
     duration: "Scheduled within the daily exercise period",
     equipment: "Vibration-isolated cycle ergometer with clip-in pedals (ISS: CEVIS)",
     purpose: "Aerobic conditioning without impact; workload can be set precisely.",
@@ -305,6 +389,26 @@ export const activities: Activity[] = [
     steps: ["Clip in and secure restraint", "Set planned workload", "Complete planned duration", "Note heart-rate response and symptoms"],
     evidenceId: "exercise",
     video: { kind: "mp4", src: "media/how-astronauts-exercise-mobile.mp4", track: "media/how-astronauts-exercise.en.vtt", crossOrigin: false, offline: true, title: "How Do Astronauts Exercise in Space?", credit: "NASA", duration: "1:29", captions: "English captions (NASA)", shows: "Explains why ISS crews exercise about two hours a day and shows the harnessed treadmill, the vibration-isolated bike and the resistance machine.", page: "https://images.nasa.gov/details/jsc2025m000002_How_Do_Astronauts_Exercise_in_Space_250106-MP4", size: "3.8 MB, stored in the app" },
+  },
+  {
+    id: "flywheel",
+    device: "Flywheel",
+    muscles: { primary: ["lats", "quads"], secondary: ["biceps", "glutes", "hamstrings", "lowerback"] },
+    clip: nasaClip("flywheel", "A NASA test subject uses a compact rowing and resistance device on the ground.", false),
+    title: "Flywheel resistance",
+    category: "Resistance",
+    kind: "flywheel",
+    duration: "Short sets; compact option studied in bed-rest research",
+    equipment: "Flywheel rowing and resistance device: the load comes from how hard you pull",
+    purpose: "A compact alternative that gives resistance without weights, studied in NASA bed-rest research.",
+    description: "Pulling a cord that spins a flywheel; the harder the pull, the greater the resistance.",
+    instructions: [
+      "Follow the set and repetition plan from your mission exercise plan.",
+      "Start each pull smoothly, then increase effort through the repetition.",
+      "Stop for pain or dizziness.",
+    ],
+    steps: ["Review today’s planned sets and repetitions", "Secure the device and your restraints", "Complete the planned sets", "Record any pain, dizziness or equipment issue"],
+    evidenceId: "exercise",
   },
   {
     id: "mobility",
