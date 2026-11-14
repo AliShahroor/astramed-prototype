@@ -64,6 +64,9 @@ export function Crew() {
   const selected = astronauts.find((a) => a.id === selectedId) ?? astronaut;
   const entries = checkinsFor(state);
   const findingsOf = (id: string) => mission.crewFindings[id].filter((f) => (f.status === "Review" || f.status === "Alert") && f.indicator !== "co2");
+  // You first, then anyone whose shared status needs attention, then everyone else by name.
+  const order = (a: Astronaut) => (a.id === astronaut.id ? 0 : a.share && findingsOf(a.id).length ? 1 : 2);
+  const ordered = [...astronauts].sort((x, y) => order(x) - order(y) || (x.share && y.share ? RANK[findingsOf(y.id)[0]?.status ?? "Nominal"] - RANK[findingsOf(x.id)[0]?.status ?? "Nominal"] : 0) || x.name.localeCompare(y.name));
 
   return (
     <>
@@ -76,7 +79,7 @@ export function Crew() {
               <span className="muted small"><Lock size={12} aria-hidden="true" /> Crewmates see status and check-ins, not measurements</span>
             </div>
             <ul className="roster crew-cards">
-              {astronauts.map((a) => {
+              {ordered.map((a) => {
                 const c = checkinState(entries, a.id, state.day);
                 const asked = openRequest(state, astronaut.id, a.id);
                 const concern = visible(state).find((n) => isConcern(n) && !n.acknowledged && n.astronautId === a.id);
@@ -106,15 +109,15 @@ export function Crew() {
                             </small>
                           </span>
                         </span>
-                        {(a.share || self) && (
-                          <span className="cc-row">
-                            <span className="cc-k">Exercise streak</span>
+                        <span className="cc-row">
+                          <span className="cc-k">Exercise streak</span>
+                          {a.share || self ? (
                             <span className="cc-v cc-streak">
                               <img src={`${import.meta.env.BASE_URL}media/streak/flame-${days.has(state.day) ? "lit" : "unlit"}.svg`} alt="" width={14} height={18} />
                               {streak} {streak === 1 ? "day" : "days"}
                             </span>
-                          </span>
-                        )}
+                          ) : <span className="cc-v muted">Not shared</span>}
+                        </span>
                       </span>
                     </button>
                   </li>
