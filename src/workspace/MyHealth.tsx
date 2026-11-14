@@ -57,11 +57,9 @@ export function MyHealth() {
   const active = findings.filter((f) => f.status === "Review" || f.status === "Alert");
   const primary = active[0];
   const others = active.slice(1);
-  const insufficient = findings.filter((f) => f.status === "Insufficient data").length;
   const visible = metrics.filter((m) => hazard === "All hazards" || m.hazards.includes(hazard));
   const shown = visible.some((m) => m.id === indicator) ? indicator : visible[0].id;
   const trend = selectSeries(mission.rows, astronaut.id, state.scenario, shown, state.day, range);
-  const alerts = active.filter((f) => f.status === "Alert").length;
 
   const pickHazard = (h: Hazard) => {
     setHazard(h);
@@ -69,27 +67,9 @@ export function MyHealth() {
     if (!avail.some((m) => m.id === indicator)) setIndicator(avail[0].id);
   };
 
-  const confirmed = active.filter((f) => f.status === "Alert" || f.persistence >= 3);
-  const awaiting = active.length - confirmed.length;
-  const summary = !primary
-    ? `No findings on mission day ${state.day}.`
-    : [
-        alerts ? `${alerts} reference ${alerts === 1 ? "exceedance" : "exceedances"}` : "",
-        confirmed.length - alerts > 0 ? `${confirmed.length - alerts} ${confirmed.length - alerts === 1 ? "finding" : "findings"} for review` : "",
-        awaiting ? `${awaiting} awaiting a repeat measurement` : "",
-      ].filter(Boolean).join(" · ");
-
   return (
     <>
-      <section className="status-bar" aria-labelledby="status-h">
-        <div>
-          <h2 id="status-h" className="sr-only">Monitoring status</h2>
-          <p className="status-line">{summary}</p>
-          <p className="muted small">
-            Mission day {state.day} · compared with your preflight baseline over the last {range === 94 ? "94 days" : `${range} days`}
-            {insufficient > 0 && ` · ${insufficient} ${insufficient === 1 ? "indicator" : "indicators"} without enough data`}
-          </p>
-        </div>
+      <section className="status-bar" style={{ justifyContent: "flex-end" }}>
         <button className="btn btn-secondary" onClick={() => open({ type: "log" })}>
           <Plus size={16} aria-hidden="true" /> Log reading
         </button>

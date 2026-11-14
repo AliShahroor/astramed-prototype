@@ -15,7 +15,7 @@ import { Countermeasures } from "./Countermeasures";
 import { Modals } from "./Modals";
 
 const NAV = [
-  { page: "health" as const, label: "My Health", title: "Personal Health Overview", icon: HeartPulse },
+  { page: "health" as const, label: "My Health", title: "Health Overview", icon: HeartPulse },
   { page: "crew" as const, label: "Crew", title: "Crew Health & Operations", icon: Users },
   { page: "countermeasures" as const, label: "Countermeasures", title: "Exercise & Cognitive Assessments", icon: Activity },
 ];
@@ -98,7 +98,6 @@ export function Workspace({ mission, route, go }: { mission: ReturnType<typeof u
           <header className="topbar">
             <div className="topbar-title">
               <h1 className="h1">{current.title}</h1>
-              <p className="page-sub">{astronaut.name} · {astronaut.role} · mission day {state.day}</p>
             </div>
             <div className="topbar-actions">
               <label className="env-select">
