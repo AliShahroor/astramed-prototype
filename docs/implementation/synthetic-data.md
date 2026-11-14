@@ -1,6 +1,6 @@
 # Synthetic data
 
-The fictional mission Ares I is simulated from 1 January 2035, for 94 days. Those dates are arbitrary narrative dates, not a real mission schedule. Four fictional adults are Alex Morgan (mission specialist), Maya Chen (commander), Leo Okafor (flight engineer) and Samira Noor (crew medical officer).
+The fictional mission Ares I is simulated from 1 January 2035, for 94 days. Those dates are arbitrary narrative dates, not a real mission schedule. Three adults are Ali Shahroor (mission specialist), Mohammad Al-Ani (commander), Nada Aboubaker (flight engineer) and (crew medical officer).
 
 `src/data/catalog.ts` defines seeded baselines and history descriptions. `generateHistory` creates one daily reading per indicator. A sine function generates bounded deterministic variation without random telemetry. A linear drift begins after day 65 for the fatigue scenario. Alex receives full fatigue drift; Samira receives 0.28 of that drift; Maya and Leo have no cognitive drift. Leo’s activity gradually decreases. No medical condition is assigned from these changes.
 

@@ -269,7 +269,7 @@ function SettingsDialog({ close }: { close: () => void }) {
           <button className="btn btn-secondary" onClick={() => { const url = URL.createObjectURL(new Blob([JSON.stringify(state, null, 2)], { type: "application/json" })); const a = document.createElement("a"); a.href = url; a.download = "astramed-demo-records.json"; a.click(); URL.revokeObjectURL(url); notify("Local records exported."); }}><Download size={15} aria-hidden="true" /> Export</button>
         </div>
         <div className="setting">
-          <div><strong>Reset demonstration</strong><p className="muted small">Back to Alex Morgan, scenario B, day 94, Mars transit. Clears logged readings, assessments, check-ins and progress.</p></div>
+          <div><strong>Reset demonstration</strong><p className="muted small">Back to Ali Shahroor, scenario B, day 94, Mars transit. Clears logged readings, assessments, check-ins and progress.</p></div>
           <button className="btn btn-secondary" onClick={() => { if ("speechSynthesis" in window) speechSynthesis.cancel(); setState((s) => ({ ...initialState(), session: s.session })); close(); go({ kind: "app", page: "health" }); notify("Demo reset."); }}><RefreshCw size={15} aria-hidden="true" /> Reset demo</button>
         </div>
         <details>

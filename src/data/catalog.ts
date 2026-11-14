@@ -12,7 +12,7 @@ export const mission: Mission = {
   id: "ares-01",
   name: "Ares I",
   day: 94,
-  crewIds: ["alex", "maya", "leo", "samira"],
+  crewIds: ["alex", "maya", "leo"],
 };
 export const scenarios: Record<Scenario, string> = {
   nominal: "A · Nominal",
@@ -198,9 +198,9 @@ const base: Record<Indicator, number> = {
 export const astronauts: Astronaut[] = [
   {
     id: "alex",
-    name: "Alex Morgan",
+    name: "Ali Shahroor",
     role: "Mission specialist",
-    initials: "AM",
+    initials: "AS",
     designation: "CREW 03 · MS",
     history:
       "Stable simulated preflight measures; recent sleep restriction in scenario B.",
@@ -209,9 +209,9 @@ export const astronauts: Astronaut[] = [
   },
   {
     id: "maya",
-    name: "Maya Chen",
+    name: "Mohammad Al-Ani",
     role: "Commander",
-    initials: "MC",
+    initials: "MA",
     designation: "CREW 01 · CDR",
     history:
       "Consistent simulated sleep and cognitive measures; higher preflight resting heart rate.",
@@ -220,9 +220,9 @@ export const astronauts: Astronaut[] = [
   },
   {
     id: "leo",
-    name: "Leo Okafor",
+    name: "Nada Aboubaker",
     role: "Flight engineer",
-    initials: "LO",
+    initials: "NA",
     designation: "CREW 02 · FE",
     history:
       "Reduced simulated activity during maintenance work; no clinical condition assigned.",
@@ -233,16 +233,6 @@ export const astronauts: Astronaut[] = [
       sleep: 7.2,
       activity: 105,
     }),
-  },
-  {
-    id: "samira",
-    name: "Samira Noor",
-    role: "Crew medical officer",
-    initials: "SN",
-    designation: "CREW 04 · CMO",
-    history: "Mild simulated sleep variability; stable cognitive responses.",
-    share: true,
-    baseline: makeBaseline({ heart: 64, reaction: 280, sleep: 7.8 }),
   },
 ];
 function makeBaseline(overrides: Partial<Record<Indicator, number>>) {

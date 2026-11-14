@@ -3,7 +3,8 @@ import { Activity, Bell, Check, ChevronDown, ChevronLeft, ChevronRight, HeartPul
 import type { Route } from "../app/route";
 import type { useMission } from "../app/useMission";
 import { initialState } from "../app/useMission";
-import { astronauts, environments, mission as missionInfo, scenarios } from "../data/catalog";
+import { clearPersisted, usePersisted } from "../app/usePersisted";
+import { astronauts, environments, hazards, metrics, mission as missionInfo, scenarios } from "../data/catalog";
 import { evaluateAll } from "../engine/monitoring";
 import type { Finding, Hazard, Indicator, Scenario } from "../types";
 import { Wordmark } from "../screens/brand";
@@ -21,9 +22,9 @@ const NAV = [
 
 export function Workspace({ mission, route, go }: { mission: ReturnType<typeof useMission>; route: Extract<Route, { kind: "app" }>; go: (r: Route) => void }) {
   const { state, setState, rows } = mission;
-  const [range, setRange] = useState(14);
-  const [indicator, setIndicator] = useState<Indicator>("reaction");
-  const [hazard, setHazard] = useState<Hazard>("All hazards");
+  const [range, setRange] = usePersisted<number>("range", 14, (v): v is number => [7, 14, 30, 94].includes(v as number));
+  const [indicator, setIndicator] = usePersisted<Indicator>("indicator", "reaction", (v): v is Indicator => metrics.some((m) => m.id === v));
+  const [hazard, setHazard] = usePersisted<Hazard>("hazard", "All hazards", (v): v is Hazard => hazards.includes(v as Hazard));
   const [modal, setModal] = useState<Modal>(null);
   const [toast, setToast] = useState("");
   const astronaut = astronauts.find((a) => a.id === state.astronautId)!;
@@ -48,12 +49,13 @@ export function Workspace({ mission, route, go }: { mission: ReturnType<typeof u
   const reset = () => {
     if ("speechSynthesis" in window) speechSynthesis.cancel();
     setState((s) => ({ ...initialState(), session: s.session }));
+    clearPersisted();
     setHazard("All hazards");
     setIndicator("reaction");
     setRange(14);
     setModal(null);
     go({ kind: "app", page: "health" });
-    setToast("Demonstration restarted: Alex Morgan, scenario B, mission day 94. Local records cleared.");
+    setToast("Demonstration restarted: Ali Shahroor, scenario B, mission day 94. Local records cleared.");
   };
 
   const ws: Ws = {
@@ -120,7 +122,7 @@ export function Workspace({ mission, route, go }: { mission: ReturnType<typeof u
             </div>
           </header>
           {mission.storageError && <p className="banner error" role="alert">Browser storage is unavailable or full. Changes are kept only until this tab closes.</p>}
-          <main id="main" tabIndex={-1} className="page">
+          <main id="main" key={route.page} tabIndex={-1} className="page">
             {route.page === "health" && <MyHealth />}
             {route.page === "crew" && <Crew />}
             {route.page === "countermeasures" && <Countermeasures />}

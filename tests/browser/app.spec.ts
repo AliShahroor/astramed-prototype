@@ -25,22 +25,22 @@ test("entry: welcome, profile selection, briefing, workspace; briefing skipped o
   await expect(page.getByText("Astronaut Health Monitoring System")).toBeVisible();
   await page.getByRole("button", { name: "Enter Mission System" }).click();
   await expect(page.getByRole("heading", { name: "Select crew profile" })).toBeVisible();
-  await page.getByRole("button", { name: /Enter as Maya Chen/ }).click();
+  await page.getByRole("button", { name: /Enter as Mohammad Al-Ani/ }).click();
   await expect(page.getByRole("heading", { name: /Mission briefing/ })).toBeVisible();
   await page.getByLabel("Environment").selectOption("moon");
   await expect(page.getByText("About 1.3 s one-way")).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("data-env", "moon");
   await page.getByRole("button", { name: "Open Workspace" }).click();
   await expect(title(page, "Personal Health Overview")).toBeVisible();
-  await expect(page.getByText("Maya Chen · Commander", { exact: false }).first()).toBeVisible();
-  await page.getByRole("button", { name: /Profile: Maya Chen/ }).click();
+  await expect(page.getByText("Mohammad Al-Ani · Commander", { exact: false }).first()).toBeVisible();
+  await page.getByRole("button", { name: /Profile: Mohammad Al-Ani/ }).click();
   await page.getByRole("menuitem", { name: "Return to profile selection" }).click();
-  await page.getByRole("button", { name: /Enter as Maya Chen/ }).click();
+  await page.getByRole("button", { name: /Enter as Mohammad Al-Ani/ }).click();
   await expect(title(page, "Personal Health Overview")).toBeVisible();
   await page.getByRole("button", { name: /Profile:/ }).click();
   await page.getByRole("menuitem", { name: "Sign out of demo session" }).click();
   await page.getByRole("button", { name: "Quick Demo" }).click();
-  await expect(page.getByText("Alex Morgan · Mission specialist", { exact: false }).first()).toBeVisible();
+  await expect(page.getByText("Ali Shahroor · Mission specialist", { exact: false }).first()).toBeVisible();
   expect(errors).toEqual([]);
 });
 
@@ -85,9 +85,9 @@ test("logging, persistence, profile switching, environment theme, hazards and da
   await expect(page.locator(".readings")).toContainText("270 ms");
   await page.reload();
   await expect(page.locator(".readings")).toContainText("270 ms");
-  await page.getByRole("button", { name: /Profile: Alex Morgan/ }).click();
-  await page.getByRole("menuitemradio", { name: /Samira Noor/ }).click();
-  await expect(page.getByText("Samira Noor · Crew medical officer", { exact: false }).first()).toBeVisible();
+  await page.getByRole("button", { name: /Profile: Ali Shahroor/ }).click();
+  await page.getByRole("menuitemradio", { name: /Mohammad Al-Ani/ }).click();
+  await expect(page.getByText("Mohammad Al-Ani · Commander", { exact: false }).first()).toBeVisible();
   await page.getByRole("banner").getByLabel("Environment").selectOption("earth");
   await expect(page.locator("html")).toHaveAttribute("data-env", "earth");
   await expect(page.locator(".mission-panel")).toContainText("1 g");
@@ -98,23 +98,33 @@ test("logging, persistence, profile switching, environment theme, hazards and da
   await expect(panel.getByLabel("Mission day", { exact: true })).toHaveValue("93");
 });
 
-test("crew dashboard: summary, detail charts, privacy, request, acknowledge, check-in, activity log", async ({ page }) => {
+test("crew: summary, detail charts, privacy, request, check-in with note, history, feed", async ({ page }) => {
   await page.goto("./#/crew");
-  await expect(page.getByRole("region", { name: "Crew summary" })).toContainText("Unacknowledged notifications");
+  await expect(page.getByRole("region", { name: "Crew summary" })).toContainText("Check-ins due today");
+  await expect(page.locator(".roster")).toContainText("Due today");
   await expect(page.locator(".crew-detail")).toContainText("Shared wellness trends");
   await expect(page.locator(".spark")).toHaveCount(3);
-  await page.getByRole("button", { name: /Leo Okafor/ }).click();
+  await page.locator(".who-btn", { hasText: "Nada Aboubaker" }).click();
   await expect(page.locator(".crew-detail")).toContainText("limited sharing");
   await expect(page.locator(".spark")).toHaveCount(0);
-  await page.getByRole("button", { name: /Maya Chen/ }).click();
+  await expect(page.locator(".checkin-history")).toContainText("Today");
+  await page.locator(".who-btn", { hasText: "Mohammad Al-Ani" }).click();
   await page.getByRole("button", { name: "Request check-in" }).click();
-  await expect(page.locator("table.notes")).toContainText("Check-in requested by Alex Morgan");
+  await expect(page.locator("table.notes")).toContainText("Check-in requested by Ali Shahroor");
+  await page.locator(".who-btn", { hasText: "Ali Shahroor" }).click();
+  await page.getByText("Requests a conversation", { exact: true }).last().click();
+  await page.getByLabel("Note for the crew (optional)").fill("Short sleep this week");
+  await page.getByRole("button", { name: "Submit check-in" }).click();
+  await expect(page.locator(".checkin-history li").first()).toContainText("Short sleep this week");
+  await expect(page.locator(".roster tr", { hasText: "Ali Shahroor" })).not.toContainText("Due today");
   await page.getByRole("button", { name: "Acknowledge", exact: true }).first().click();
+  await page.getByRole("button", { name: "All notifications" }).click();
   await expect(page.locator("table.notes")).toContainText("Acknowledged");
-  await page.locator(".who-btn", { hasText: "Alex Morgan" }).click();
-  await page.getByRole("button", { name: "No concerns" }).click();
-  await expect(page.getByRole("button", { name: "No concerns" })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.locator(".log")).toContainText("Alex checked in: No concerns");
+  await page.getByRole("button", { name: "Activity" }).click();
+  await expect(page.locator(".log")).toContainText("Ali checked in: Requests a conversation");
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Activity" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".crew-detail h2")).toContainText("Ali Shahroor");
   await expect(page.locator(".timeline-grid")).toBeVisible();
 });
 
@@ -189,9 +199,9 @@ test("crew detail opens as a slide-over sheet on phones", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("./#/crew");
   await expect(page.locator(".crew-detail")).toBeHidden();
-  await page.locator(".who-btn", { hasText: "Maya Chen" }).click();
+  await page.locator(".who-btn", { hasText: "Mohammad Al-Ani" }).click();
   await expect(page.locator(".crew-detail")).toBeVisible();
-  await expect(page.locator(".crew-detail")).toContainText("Maya Chen");
+  await expect(page.locator(".crew-detail")).toContainText("Mohammad Al-Ani");
   await page.keyboard.press("Escape");
   await expect(page.locator(".crew-detail")).toBeHidden();
 });

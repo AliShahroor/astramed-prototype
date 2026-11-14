@@ -1,5 +1,11 @@
 # Validation record · 14 November 2026
 
+## Crew and check-in pass
+
+Crew renamed to Ali Shahroor (mission specialist), Mohammad Al-Ani (commander) and Nada Aboubaker (flight engineer, limited sharing); crew reduced to three. Accent side-lines removed from navigation, roster, evidence list and notices. Filters, time range, selected crew member and feed tab are remembered across reloads (`astramed-ui-v1`), cleared on restart. Check-ins: one week of synthetic routine check-ins (marked "sim"), due/overdue state, check-in form with status and note, history per crew member, crew requests answered automatically by a check-in, "Requests medical support" raises a crew notification. Notifications and activity combined with Open / All / Activity views and Acknowledge all. Pages fade in on navigation (disabled for reduced motion). My Health and Countermeasures were not changed in this pass.
+
+Checks run: typecheck and lint passed; 18/18 unit tests; build passed; Playwright 13/13 against a local production preview.
+
 ## Cognitive battery and overview pass
 
 WinSCAT-style battery (CDS, CPT, MTH, MTS, CDD) with NASA-sourced task structure; My Health overview rewritten (status split into findings for review vs awaiting repeat, whole-number comparisons stated against the baseline value, radiation as % of the career limit, CO₂ against its limit); reaction-time explanation generated from the calculated values; slide-over crew detail on screens under 1100 px; the cycle-ergometer NASA video (3.8 MB) bundled and precached so it plays offline.

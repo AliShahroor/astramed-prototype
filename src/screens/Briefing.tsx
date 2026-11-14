@@ -37,7 +37,7 @@ export function Briefing({
         <dl className="brief-grid">
           <div>
             <dt>Mission</dt>
-            <dd>{mission.name}, a fictional long-duration Mars transit with four crew</dd>
+            <dd>{mission.name}, a fictional long-duration Mars transit with three crew</dd>
           </div>
           <div>
             <dt>Mission day</dt>

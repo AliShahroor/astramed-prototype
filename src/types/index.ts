@@ -152,6 +152,17 @@ export interface CogResult {
   /** CPT only: responses slower than 700 ms or missing */
   lapses?: number;
 }
+export interface CheckInEntry {
+  id: string;
+  astronautId: string;
+  scenario: Scenario;
+  day: number;
+  /** HH:MM on the simulated mission clock */
+  time: string;
+  status: "ok" | "talk" | "support";
+  note?: string;
+  source: "synthetic" | "recorded";
+}
 export interface CrewNotification {
   id: string;
   astronautId: string;
@@ -214,6 +225,7 @@ export interface AppState {
   session: Session;
   videoViews: VideoView[];
   cognitive: CogResult[];
+  checkinEntries: CheckInEntry[];
   /** checked demonstration-checklist steps, keyed scenario-astronaut-activity-day */
   checklists: Record<string, number[]>;
 }

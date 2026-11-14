@@ -44,7 +44,7 @@ export function DemoAccess({ state, onEnter, onBack }: { state: AppState; onEnte
         </ul>
         <div className="guest-row">
           <button className="btn btn-quiet" onClick={() => onEnter("alex")}>
-            Continue as guest (Alex Morgan)
+            Continue as guest (Ali Shahroor)
           </button>
         </div>
       </main>

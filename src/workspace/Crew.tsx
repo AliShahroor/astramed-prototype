@@ -3,6 +3,7 @@ import { Lock, X } from "lucide-react";
 import { Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { activities, astronauts, metricFor } from "../data/catalog";
 import { CABIN_ID, CREW_WINDOW_DAYS } from "../app/useMission";
+import { usePersisted } from "../app/usePersisted";
 import { dayTimestamp, evaluateAll, selectSeries } from "../engine/monitoring";
 import type { Astronaut, CrewNotification, Finding, Indicator, Measurement, Status } from "../types";
 import { StatusTag, useWs } from "./context";
@@ -15,10 +16,38 @@ const time = (iso: string) => {
   return `Day ${d}, ${iso.slice(11, 16)}`;
 };
 
+export interface Entry { id: string; astronautId: string; day: number; time: string; status: string; note?: string; source: "synthetic" | "recorded" }
+
+/** Synthetic routine check-ins for the last week (documented as simulated), plus everything recorded in the app. */
+export function checkinsFor(state: ReturnType<typeof useWs>["state"]): Entry[] {
+  const out: Entry[] = [];
+  const base: Record<string, number> = { alex: 7 * 60 + 5, maya: 7 * 60 + 20, leo: 7 * 60 + 40 };
+  for (const a of astronauts)
+    for (let d = Math.max(1, state.day - 6); d <= state.day; d++) {
+      const fatigued = state.scenario === "fatigue" && a.id === "alex";
+      if (fatigued && d === state.day) continue; // today's check-in is still due in scenario B
+      const m = (base[a.id] ?? 480) + ((d * 7 + a.id.length * 3) % 11);
+      out.push({ id: `syn-${a.id}-${d}`, astronautId: a.id, day: d, time: `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`, status: fatigued && d >= state.day - 2 ? "talk" : "ok", source: "synthetic" });
+    }
+  for (const [k, v] of Object.entries(state.checkins)) {
+    const [sc, id, d] = k.split("-");
+    if (sc === state.scenario && Number(d) <= state.day) out.push({ id: `legacy-${k}`, astronautId: id, day: Number(d), time: "10:00", status: v, source: "recorded" });
+  }
+  for (const e of state.checkinEntries) if (e.scenario === state.scenario && e.day <= state.day) out.push({ ...e });
+  return out.sort((a, b) => a.day - b.day || a.time.localeCompare(b.time));
+}
+const when = (e: Entry, today: number) => (e.day === today ? `Today ${e.time}` : e.day === today - 1 ? `Yesterday ${e.time}` : `Day ${e.day}, ${e.time}`);
+function checkinState(entries: Entry[], id: string, today: number) {
+  const mine = entries.filter((e) => e.astronautId === id);
+  const last = mine.at(-1);
+  const due = !last ? "overdue" : last.day === today ? "done" : last.day === today - 1 ? "due" : "overdue";
+  return { last, mine, due } as const;
+}
+
 export function Crew() {
   const ws = useWs();
   const { state, mission, astronaut } = ws;
-  const [selectedId, setSelected] = useState(astronaut.id);
+  const [selectedId, setSelected] = usePersisted<string>("crewSelected", astronaut.id, (v): v is string => astronauts.some((a) => a.id === v));
   // Below 1100 px the detail panel is a slide-over sheet opened by selecting a crew member.
   const [sheet, setSheet] = useState(false);
   const setSelectedId = (id: string) => {
@@ -36,36 +65,33 @@ export function Crew() {
   const notes = state.notifications.filter((n) => n.scenario === state.scenario && n.day <= state.day);
   const unacked = notes.filter((n) => !n.acknowledged);
   const pendingFor = (id: string) => unacked.filter((n) => n.astronautId === id);
-  const checkinToday = (id: string) => state.checkins[`${state.scenario}-${id}-${state.day}`];
+  const entries = checkinsFor(state);
   const active = (id: string) => mission.crewFindings[id].filter((f) => (f.status === "Review" || f.status === "Alert") && f.indicator !== "co2");
   const cabinAlert = mission.crewFindings[astronauts[0].id].find((f) => f.indicator === "co2" && f.status === "Alert");
 
-  const review = astronauts.filter((a) => a.share && active(a.id).length > 0).length;
-  const pendingCheckins = astronauts.filter((a) => pendingFor(a.id).length > 0 && !checkinToday(a.id)).length;
+  const dueToday = astronauts.filter((a) => checkinState(entries, a.id, state.day).due !== "done").length;
 
   return (
     <>
       <section className="ops-summary" aria-label="Crew summary">
         <dl>
-          <div><dt>Crew on mission</dt><dd>{astronauts.length}</dd></div>
-          <div><dt>Shared review status</dt><dd>{review}</dd></div>
-          <div><dt>Check-ins pending</dt><dd>{pendingCheckins}</dd></div>
-          <div><dt>Unacknowledged notifications</dt><dd>{unacked.length}</dd></div>
-          <div><dt>Cabin CO₂</dt><dd className={cabinAlert ? "warn-text" : ""}>{cabinAlert ? "Above reference" : "Within reference"}</dd></div>
+          <div><dt>Crew</dt><dd>{astronauts.length}</dd></div>
+          <div><dt>Check-ins due today</dt><dd className={dueToday ? "warn-text" : ""}>{dueToday}</dd></div>
+          <div><dt>Open notifications</dt><dd className={unacked.length ? "warn-text" : ""}>{unacked.length}</dd></div>
+          <div><dt>Cabin CO₂</dt><dd className={cabinAlert ? "warn-text" : ""}>{cabinAlert ? "Above limit" : "Within limit"}</dd></div>
         </dl>
-        <p className="muted small"><Lock size={13} aria-hidden="true" /> Crewmates see shared status, check-ins and, where the profile permits, three wellness trends. Demo permission model, not authenticated access.</p>
       </section>
 
       <div className="crew-layout">
         <div className="crew-main">
           <section aria-labelledby="roster-h">
-            <div className="section-head"><h2 id="roster-h" className="h2">Crew roster</h2><span className="muted small">Status window: last {CREW_WINDOW_DAYS} days</span></div>
+            <div className="section-head"><h2 id="roster-h" className="h2">Crew</h2><span className="muted small"><Lock size={12} aria-hidden="true" /> Shared status only · demo permissions</span></div>
             <div className="table-wrap" role="region" aria-label="Crew roster" tabIndex={0}>
               <table className="roster">
-                <thead><tr><th scope="col">Crew member</th><th scope="col">Shared status</th><th scope="col">Last check-in</th><th scope="col">Attention request</th></tr></thead>
+                <thead><tr><th scope="col">Crew member</th><th scope="col">Status</th><th scope="col">Last check-in</th><th scope="col">Requests</th></tr></thead>
                 <tbody>
                   {astronauts.map((a) => {
-                    const c = lastCheckin(state, a.id);
+                    const c = checkinState(entries, a.id, state.day);
                     const p = pendingFor(a.id);
                     return (
                       <tr key={a.id} className={a.id === selected.id ? "selected" : ""} onClick={() => setSelectedId(a.id)}>
@@ -76,8 +102,12 @@ export function Crew() {
                           </button>
                         </th>
                         <td><SharedStatus a={a} active={active(a.id)} pending={p.length > 0} /></td>
-                        <td>{c.label}<small className="muted block">{c.detail}</small></td>
-                        <td>{p.length ? <span className="tone warn">{p.length === 1 ? (p[0].kind === "request" ? "Check-in requested by crew" : "Check-in requested") : `${p.length} open`}</span> : <span className="muted">None</span>}</td>
+                        <td>
+                          {c.last ? when(c.last, state.day) : "None"}
+                          {c.due !== "done" && <span className={`due ${c.due}`}>{c.due === "due" ? "Due today" : "Overdue"}</span>}
+                          {c.last && <small className="muted block">{CHECKIN[c.last.status]}</small>}
+                        </td>
+                        <td>{p.length ? <span className="tone warn">{p.length} open</span> : <span className="muted">None</span>}</td>
                       </tr>
                     );
                   })}
@@ -87,39 +117,44 @@ export function Crew() {
           </section>
 
           <AttentionTimeline />
-          <Notifications notes={notes} onReview={setSelectedId} />
-          <ActivityLog />
+          <Feed notes={notes} onReview={setSelectedId} />
         </div>
         {sheet && <button className="sheet-backdrop" aria-label="Close crew member details" onClick={() => setSheet(false)} />}
-        <CrewDetail a={selected} active={active(selected.id)} pending={pendingFor(selected.id)} open={sheet} onClose={() => setSheet(false)} />
+        <CrewDetail a={selected} active={active(selected.id)} pending={pendingFor(selected.id)} entries={entries} open={sheet} onClose={() => setSheet(false)} />
       </div>
     </>
   );
-}
-
-function lastCheckin(state: ReturnType<typeof useWs>["state"], id: string) {
-  for (let d = state.day; d >= 1; d--) {
-    const v = state.checkins[`${state.scenario}-${id}-${d}`];
-    if (v) return { label: `Day ${d}`, detail: CHECKIN[v] ?? "Recorded", recorded: true, status: v };
-  }
-  return { label: "Not recorded", detail: "No check-in in this scenario", recorded: false, status: "" };
 }
 
 function SharedStatus({ a, active, pending }: { a: Astronaut; active: Finding[]; pending: boolean }) {
   if (!a.share) return <span className="tone muted"><Lock size={13} aria-hidden="true" /> Limited sharing</span>;
   const top = active[0]?.status;
   if (top) return <StatusTag status={top} />;
-  if (pending) return <span className="tone warn">Awaiting check-in</span>;
+  if (pending) return <span className="tone warn">Attention requested</span>;
   return <StatusTag status="Nominal" />;
 }
 
-function CrewDetail({ a, active, pending, open: isOpen, onClose }: { a: Astronaut; active: Finding[]; pending: CrewNotification[]; open: boolean; onClose: () => void }) {
+function CrewDetail({ a, active, pending, entries, open: isOpen, onClose }: { a: Astronaut; active: Finding[]; pending: CrewNotification[]; entries: Entry[]; open: boolean; onClose: () => void }) {
   const { state, setState, astronaut, mission, notify, update, open } = useWs();
   const self = a.id === astronaut.id;
-  const c = lastCheckin(state, a.id);
-  const record = (status: string) => {
-    setState((s) => ({ ...s, checkins: { ...s.checkins, [`${s.scenario}-${a.id}-${s.day}`]: status } }));
-    notify(`Check-in recorded: ${CHECKIN[status]}.`);
+  const c = checkinState(entries, a.id, state.day);
+  const [status, setStatus] = useState<"ok" | "talk" | "support">("ok");
+  const [note, setNote] = useState("");
+  const record = (e: React.FormEvent) => {
+    e.preventDefault();
+    const now = new Date();
+    const t = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+    const requests = state.notifications.filter((n) => n.scenario === state.scenario && n.astronautId === a.id && n.kind === "request" && !n.acknowledged && n.requestedBy !== a.id);
+    setState((s) => {
+      let notifications = s.notifications.map((n) => (requests.some((r) => r.id === n.id) ? { ...n, acknowledged: true, acknowledgedAt: dayTimestamp(s.day, now.getHours()) } : n));
+      if (status === "support") {
+        const id = `${s.scenario}-support-${a.id}-${s.day}-${t}`;
+        notifications = [{ id, astronautId: a.id, scenario: s.scenario, day: s.day, findingId: "", title: `Medical support requested by ${a.name}`, acknowledged: false, timestamp: dayTimestamp(s.day, now.getHours()), kind: "request", requestedBy: a.id }, ...notifications];
+      }
+      return { ...s, notifications, checkinEntries: [...s.checkinEntries, { id: crypto.randomUUID(), astronautId: a.id, scenario: s.scenario, day: s.day, time: t, status, note: note.trim() || undefined, source: "recorded" }] };
+    });
+    setNote("");
+    notify(`Check-in recorded at ${t}: ${CHECKIN[status]}.${requests.length ? ` ${requests.length} open request${requests.length > 1 ? "s" : ""} answered.` : ""}${status === "support" ? " The crew has been notified." : ""}`);
   };
   const request = () => {
     const id = `${state.scenario}-request-${a.id}-${state.day}`;
@@ -139,7 +174,7 @@ function CrewDetail({ a, active, pending, open: isOpen, onClose }: { a: Astronau
       </div>
       <dl className="detail-facts">
         <div><dt>Shared status</dt><dd><SharedStatus a={a} active={active} pending={pending.length > 0} /></dd></div>
-        <div><dt>Latest check-in</dt><dd>{c.label}{c.recorded && ` · ${c.detail}`}</dd></div>
+        <div><dt>Latest check-in</dt><dd>{c.last ? `${when(c.last, state.day)} · ${CHECKIN[c.last.status]}` : "None"}</dd></div>
         <div><dt>Open requests</dt><dd>{pending.length || "None"}</dd></div>
         <div><dt>Data sharing</dt><dd>{a.share ? "Status and wellness trends" : "Status and check-ins only"}</dd></div>
       </dl>
@@ -164,15 +199,35 @@ function CrewDetail({ a, active, pending, open: isOpen, onClose }: { a: Astronau
         <p className="privacy-box"><Lock size={15} aria-hidden="true" /> {a.name.split(" ")[0]} has limited sharing. Findings and trends stay in their personal record.</p>
       )}
 
+      <h3 className="h3 spaced">Check-in history</h3>
+      <ol className="checkin-history">
+        {c.mine.length === 0 ? <li className="muted">No check-ins yet.</li> : [...c.mine].reverse().slice(0, 5).map((e) => (
+          <li key={e.id}>
+            <span className={`dot-status ${e.status}`} aria-hidden="true" />
+            <span className="grow">{CHECKIN[e.status]}{e.note && <small className="block muted">“{e.note}”</small>}</span>
+            <span className="muted small nowrap">{when(e, state.day)}{e.source === "synthetic" && " · sim"}</span>
+          </li>
+        ))}
+      </ol>
+
       <div className="detail-actions">
         {self ? (
-          <>
-            <h3 className="h3">Record your check-in</h3>
-            <div className="checkin-options" role="group" aria-label="Check-in status">
-              {Object.keys(CHECKIN).map((k) => <button key={k} className="choice" aria-pressed={state.checkins[`${state.scenario}-${a.id}-${state.day}`] === k} onClick={() => record(k)}>{CHECKIN[k]}</button>)}
+          <form className="checkin-form" onSubmit={record}>
+            <h3 className="h3">{c.due === "done" ? "Update today’s check-in" : "Check in for today"}</h3>
+            <div className="checkin-options" role="radiogroup" aria-label="How are you today?">
+              {(Object.keys(CHECKIN) as ("ok" | "talk" | "support")[]).map((k) => (
+                <label key={k} className={status === k ? "choice selected" : "choice"}>
+                  <input type="radio" name="checkin" value={k} checked={status === k} onChange={() => setStatus(k)} className="sr-only" />
+                  {CHECKIN[k]}
+                </label>
+              ))}
             </div>
-            {active.length > 0 && <button className="btn btn-secondary" onClick={() => open({ type: "finding", indicator: active[0].indicator })}>Open my health card</button>}
-          </>
+            <label className="field-label">Note for the crew (optional)<input className="field" value={note} maxLength={140} onChange={(e) => setNote(e.target.value)} placeholder="e.g. slept badly, will rest after shift" /></label>
+            <div className="actions">
+              <button className="btn btn-primary" type="submit">Submit check-in</button>
+              {active.length > 0 && <button type="button" className="btn btn-quiet" onClick={() => open({ type: "finding", indicator: active[0].indicator })}>Open my health card</button>}
+            </div>
+          </form>
         ) : (
           <div className="actions">
             <button className="btn btn-secondary" onClick={request}>Request check-in</button>
@@ -259,14 +314,40 @@ function AttentionTimeline() {
   );
 }
 
-function Notifications({ notes, onReview }: { notes: CrewNotification[]; onReview: (id: string) => void }) {
+function Feed({ notes, onReview }: { notes: CrewNotification[]; onReview: (id: string) => void }) {
+  const [tab, setTab] = usePersisted<"open" | "all" | "activity">("crewFeed", "open", (v): v is "open" | "all" | "activity" => v === "open" || v === "all" || v === "activity");
+  const { setState, notify } = useWs();
+  const openNotes = notes.filter((n) => !n.acknowledged);
+  return (
+    <section aria-labelledby="feed-h">
+      <div className="section-head">
+        <h2 id="feed-h" className="h2">Notifications and activity</h2>
+        <div className="segmented" role="group" aria-label="Show">
+          <button aria-pressed={tab === "open"} onClick={() => setTab("open")}>Open ({openNotes.length})</button>
+          <button aria-pressed={tab === "all"} onClick={() => setTab("all")}>All notifications</button>
+          <button aria-pressed={tab === "activity"} onClick={() => setTab("activity")}>Activity</button>
+        </div>
+      </div>
+      {tab === "activity" ? <ActivityLog /> : (
+        <>
+          <Notifications notes={tab === "open" ? openNotes : notes} onReview={onReview} empty={tab === "open" ? "Nothing open. All notifications are acknowledged." : "No notifications in this scenario up to the selected day."} />
+          {tab === "open" && openNotes.length > 1 && (
+            <button className="btn btn-link sm spaced" onClick={() => { setState((s) => ({ ...s, notifications: s.notifications.map((n) => (openNotes.some((o) => o.id === n.id) ? { ...n, acknowledged: true, acknowledgedAt: dayTimestamp(s.day, 15) } : n)) })); notify(`${openNotes.length} notifications acknowledged.`); }}>Acknowledge all</button>
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+function Notifications({ notes, onReview, empty }: { notes: CrewNotification[]; onReview: (id: string) => void; empty: string }) {
   const { setState, notify, astronaut, mission, open } = useWs();
   const ack = (n: CrewNotification, verb = "Acknowledged") => {
     setState((s) => ({ ...s, notifications: s.notifications.map((x) => (x.id === n.id ? { ...x, acknowledged: true, acknowledgedAt: dayTimestamp(s.day, 15) } : x)) }));
     notify(`${verb}. The underlying finding remains until the readings change.`);
   };
   const context = (n: CrewNotification) => {
-    if (n.kind === "request") return "Manual request from a crewmate";
+    if (n.kind === "request") return n.requestedBy === n.astronautId ? "Raised from a check-in" : "Manual request from a crewmate";
     if (n.astronautId === CABIN_ID) {
       const f = mission.crewFindings[astronauts[0].id].find((x) => x.indicator === "co2");
       return f?.current ? `Cabin CO₂ ${f.current.value} mmHg one-hour average vs 3 mmHg reference` : "Cabin CO₂ reference";
@@ -275,9 +356,8 @@ function Notifications({ notes, onReview }: { notes: CrewNotification[]; onRevie
   };
   const who = (id: string) => (id === CABIN_ID ? "Cabin environment" : astronauts.find((a) => a.id === id)?.name ?? id);
   return (
-    <section aria-labelledby="notes-h">
-      <div className="section-head"><h2 id="notes-h" className="h2">Notifications</h2><span className="muted small">{notes.filter((n) => !n.acknowledged).length} unacknowledged</span></div>
-      {notes.length === 0 ? <p className="empty">No notifications in this scenario up to the selected day.</p> : (
+    <>
+      {notes.length === 0 ? <p className="empty">{empty}</p> : (
         <div className="table-wrap" role="region" aria-label="Notifications" tabIndex={0}>
           <table className="notes">
             <thead><tr><th scope="col">Crew member</th><th scope="col">Notification</th><th scope="col">Raised</th><th scope="col">State</th><th scope="col"><span className="sr-only">Actions</span></th></tr></thead>
@@ -298,7 +378,7 @@ function Notifications({ notes, onReview }: { notes: CrewNotification[]; onRevie
           </table>
         </div>
       )}
-    </section>
+    </>
   );
 }
 
@@ -313,19 +393,15 @@ function ActivityLog() {
     events.push({ t: n.timestamp, text: n.kind === "request" ? `${name(n.requestedBy ?? "")} requested a check-in from ${name(n.astronautId)}` : `Notification raised: ${n.title}` });
     if (n.acknowledgedAt) events.push({ t: n.acknowledgedAt, text: `Notification acknowledged: ${n.title}` });
   }
-  for (const [k, v] of Object.entries(state.checkins)) {
-    const [sc, id, d] = k.split("-");
-    if (sc === state.scenario && Number(d) <= state.day) events.push({ t: dayTimestamp(Number(d), 10), text: `${name(id)} checked in: ${CHECKIN[v] ?? v}` });
-  }
+  for (const e of checkinsFor(state)) if (e.source === "recorded") events.push({ t: `${dayTimestamp(e.day).slice(0, 11)}${e.time}`, text: `${name(e.astronautId)} checked in: ${CHECKIN[e.status] ?? e.status}${e.note ? ` (“${e.note}”)` : ""}` });
   events.sort((a, b) => b.t.localeCompare(a.t));
   return (
-    <section aria-labelledby="log-h">
-      <div className="section-head"><h2 id="log-h" className="h2">Crew activity</h2><span className="muted small">Recorded in this demo session</span></div>
+    <>
       {events.length === 0 ? <p className="empty">No crew activity recorded yet. Check-ins, assessments, exercise sessions and acknowledgements appear here.</p> : (
         <ol className="log">
           {events.slice(0, 12).map((e, i) => <li key={i}><span className="nowrap muted">{time(e.t)}</span><span>{e.text}</span></li>)}
         </ol>
       )}
-    </section>
+    </>
   );
 }
