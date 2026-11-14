@@ -94,12 +94,12 @@ export function sessionStreak(days: Set<number>, today: number): number {
 
 /**
  * Session length shown by the progress bar. ISS practice: about 30 minutes of aerobic work at
- * 70–100% of maximum heart rate, and 30–60 minutes of resistance work (NASA OCHMO exercise brief).
+ * 70-100% of maximum heart rate, and 30-60 minutes of resistance work (NASA OCHMO exercise brief).
  */
 export const PLAN = {
-  aerobic: { minSec: 30 * 60, maxSec: 30 * 60, label: "About 30 min aerobic, at 70–100% of max heart rate" },
-  strength: { minSec: 30 * 60, maxSec: 60 * 60, label: "Resistance block of 30–60 min" },
-  flywheel: { minSec: 30 * 60, maxSec: 60 * 60, label: "Resistance block of 30–60 min" },
+  aerobic: { minSec: 30 * 60, maxSec: 30 * 60, label: "About 30 min aerobic, at 70-100% of max heart rate" },
+  strength: { minSec: 30 * 60, maxSec: 60 * 60, label: "Resistance block of 30-60 min" },
+  flywheel: { minSec: 30 * 60, maxSec: 60 * 60, label: "Resistance block of 30-60 min" },
 } as const;
 
 export type Kind = keyof typeof PLAN;

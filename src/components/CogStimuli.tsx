@@ -9,7 +9,7 @@ import { seeded } from "../engine/battery";
 /** A radially symmetric "fractal" pattern, fully determined by its id (Fractal 2-Back). */
 export function Fractal({ id, size = 132 }: { id: number; size?: number }) {
   const r = seeded(`f2b-${id}`);
-  const fold = 5 + Math.floor(r() * 4); // 5–8 petals
+  const fold = 5 + Math.floor(r() * 4); // 5-8 petals
   const hue = Math.floor(r() * 360);
   const c = size / 2;
   const outer = c - 10;
@@ -42,7 +42,7 @@ export function Fractal({ id, size = 132 }: { id: number; size?: number }) {
 /** A projected wireframe prism with one blue facet, fully determined by its id (VOLT). */
 export function WireObject({ id, size = 128 }: { id: number; size?: number }) {
   const r = seeded(`volt-${id}`);
-  const n = 3 + Math.floor(r() * 4); // 3–6 sides
+  const n = 3 + Math.floor(r() * 4); // 3-6 sides
   const rad = size * (0.24 + r() * 0.06);
   const rot = r() * Math.PI;
   const c = size / 2;

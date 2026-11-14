@@ -224,7 +224,7 @@ function LogReading({ initial, onDone }: { initial: Indicator; onDone: () => voi
           <input className="field" type="time" value={time} onChange={(e) => setTime(e.target.value)} />
         </label>
       </div>
-      <p id="log-hint" className="muted small">Accepted input range {m.min}–{m.max} {m.unit}: a data-quality check, not a medical limit. The chart uses the latest reading of each day.</p>
+      <p id="log-hint" className="muted small">Accepted input range {m.min}-{m.max} {m.unit}: a data-quality check, not a medical limit. The chart uses the latest reading of each day.</p>
       {id === "co2" && (
         <label className="check"><input type="checkbox" checked={average} onChange={(e) => setAverage(e.target.checked)} /> This is a one-hour average partial pressure</label>
       )}

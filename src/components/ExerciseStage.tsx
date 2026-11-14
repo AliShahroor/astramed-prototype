@@ -59,7 +59,7 @@ export function ExerciseStage({ a, restHr, onSave }: {
       ["Cadence", `${fmt(setting("cadence") + wob(3))} rpm`],
     ] as [string, string][]),
     ["Heart rate", `${hrNow} bpm`],
-    ["Average heart rate", hr.avg ? `${fmt(hr.avg)} bpm` : "–"],
+    ["Average heart rate", hr.avg ? `${fmt(hr.avg)} bpm` : "-"],
     ["Share of max heart rate", `${fmt((demo.hr / DEMO_MAX_HR) * 100)}%`],
     ["Time at 70% or more", formatClock(hr.secAbove70)],
     ["Time at 90% or more", formatClock(hr.secAbove90)],
@@ -69,7 +69,7 @@ export function ExerciseStage({ a, restHr, onSave }: {
     ["Sets done", fmt(st.sets)],
     ["Volume", `${fmt(st.volume)} kg`],
     ["Load ÷ body mass", `${fmt(load / DEMO_BODY_MASS_KG, 2)} ×`],
-    ["Estimated max", st.estMax ? `${fmt(st.estMax, 1)} kg` : "–"],
+    ["Estimated max", st.estMax ? `${fmt(st.estMax, 1)} kg` : "-"],
     ["Heart rate", `${hrNow} bpm`],
   ] : [
     ["Duration", formatClock(demo.sec)],
@@ -77,7 +77,7 @@ export function ExerciseStage({ a, restHr, onSave }: {
     ["Total reps", fmt(st.reps + demo.repInSet)],
     ["Sets done", fmt(st.sets)],
     ["Heart rate", `${hrNow} bpm`],
-    ["Average heart rate", hr.avg ? `${fmt(hr.avg)} bpm` : "–"],
+    ["Average heart rate", hr.avg ? `${fmt(hr.avg)} bpm` : "-"],
   ];
 
   const save = () => {
@@ -155,15 +155,15 @@ function Clip({ clip }: { clip: ExerciseClip }) {
 /** Personal bests for one exercise, shown as a heading with the numbers side by side. */
 export function BestRecord({ kind, bests, broken }: { kind: Kind; bests: Bests; broken: string[] }) {
   const items: [string, string][] = kind === "aerobic" ? [
-    ["Longest session", bests.longestSec ? formatClock(bests.longestSec) : "–"],
-    ["Time at 70% or more", bests.secAbove70 ? formatClock(bests.secAbove70) : "–"],
+    ["Longest session", bests.longestSec ? formatClock(bests.longestSec) : "-"],
+    ["Time at 70% or more", bests.secAbove70 ? formatClock(bests.secAbove70) : "-"],
   ] : kind === "strength" ? [
-    ["Estimated max", bests.estMax ? `${fmt(bests.estMax, 1)} kg` : "–"],
-    ["Heaviest set", bests.topLoad ? `${fmt(bests.topLoad)} kg` : "–"],
-    ["Best volume", bests.volume ? `${fmt(bests.volume)} kg` : "–"],
+    ["Estimated max", bests.estMax ? `${fmt(bests.estMax, 1)} kg` : "-"],
+    ["Heaviest set", bests.topLoad ? `${fmt(bests.topLoad)} kg` : "-"],
+    ["Best volume", bests.volume ? `${fmt(bests.volume)} kg` : "-"],
   ] : [
-    ["Most reps", bests.reps ? fmt(bests.reps) : "–"],
-    ["Longest session", bests.longestSec ? formatClock(bests.longestSec) : "–"],
+    ["Most reps", bests.reps ? fmt(bests.reps) : "-"],
+    ["Longest session", bests.longestSec ? formatClock(bests.longestSec) : "-"],
   ];
   return (
     <section className="best" aria-labelledby="best-h">

@@ -316,7 +316,7 @@ export function evaluate(
     change,
     persistence,
     observations: series.length,
-    window: `Days ${Math.max(1, day - range + 1)}–${day}`,
+    window: `Days ${Math.max(1, day - range + 1)}-${day}`,
     rule: { id: `CB-${indicator}-1`, version: "1.0.0", origin, criterion },
     explanation,
     uncertainty: `Synthetic preflight baseline (${astronaut.baseline[indicator]?.count ?? 0} observations). ${current?.source ?? "Missing reading"}. Rules are unvalidated; context and measurement error may be missing.`,
@@ -354,7 +354,7 @@ export function validateReading(
   if (!Number.isFinite(value)) return "Enter a finite number.";
   if (unit !== m.unit) return `Expected ${m.unit}.`;
   if (value < m.min || value > m.max)
-    return `Data-quality range: ${m.min}–${m.max} ${m.unit}. This is not a safety range.`;
+    return `Data-quality range: ${m.min}-${m.max} ${m.unit}. This is not a safety range.`;
   if (!Number.isFinite(Date.parse(timestamp)))
     return "Enter a valid timestamp.";
   if (timestamp.slice(0, 10) !== dayTimestamp(day).slice(0, 10))

@@ -15,7 +15,7 @@ import { StatusTag, useWs } from "./context";
 
 export function formatValue(f: Finding) {
   const m = metricFor(f.indicator);
-  return f.current ? `${f.current.value.toFixed(m.decimals)} ${m.unit}` : "—";
+  return f.current ? `${f.current.value.toFixed(m.decimals)} ${m.unit}` : "-";
 }
 export function referenceText(f: Finding) {
   const m = metricFor(f.indicator);
@@ -35,7 +35,7 @@ export function changeText(f: Finding) {
 /** Overview figures: whole-number percentages and the comparison stated in words. Full precision stays in the health card. */
 function readingValue(f: Finding) {
   const m = metricFor(f.indicator);
-  if (!f.current) return "—";
+  if (!f.current) return "-";
   const v = f.current.value;
   if (f.indicator === "strength") return <>{v.toFixed(0)}<span className="unit">% of preflight</span></>;
   if (f.indicator === "radiation") return <>{v.toFixed(0)}<span className="unit"> mSv</span></>;

@@ -108,7 +108,7 @@ export const evidence: Evidence[] = [
     agency: "NASA",
     title: "The Cognition and Fine Motor Skills Test Batteries",
     url: "https://ntrs.nasa.gov/citations/20205008023",
-    version: "NASA/TM-20205008023 (2020), task descriptions pp. 11–12",
+    version: "NASA/TM-20205008023 (2020), task descriptions pp. 11-12",
     section: "Cognition battery sub-test descriptions",
     type: "research",
     statement:

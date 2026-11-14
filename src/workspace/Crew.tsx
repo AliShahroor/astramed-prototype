@@ -346,7 +346,7 @@ function Spark({ indicator, rows, baseline }: { indicator: Indicator; rows: Meas
     <figure className="spark">
       <figcaption>
         <span>{m.short}</span>
-        <strong>{last ? `${last.value.toFixed(m.decimals)} ${m.unit}` : "—"}</strong>
+        <strong>{last ? `${last.value.toFixed(m.decimals)} ${m.unit}` : "-"}</strong>
         <small className={pct !== null && Math.abs(pct) >= 15 ? "warn-text" : "muted"}>{pct === null ? "no data" : `${pct >= 0 ? "+" : "−"}${Math.abs(Math.round(pct))}% vs ${baseline}`}</small>
       </figcaption>
       <div className="spark-chart" role="img" aria-label={`${m.short}, last ${rows.length} days, latest ${last?.value ?? "none"} ${m.unit}, baseline ${baseline} ${m.unit}`}>
