@@ -592,3 +592,39 @@ i.cell { display: inline-block; width: 14px; height: 12px; }
 @media (max-width: 1400px) { .training-cols { grid-template-columns: minmax(0, 1fr); } }
 .notes { min-width: 640px; }
 @media (max-width: 900px) { .sidebar-brand .wordmark-text { display: none; } }
+/* Crew detail: side column on desktop, slide-over sheet below 1100 px */
+.sheet-close, .sheet-backdrop { display: none; }
+@media (max-width: 1100px) {
+  .crew-detail { position: fixed; top: 0; right: 0; bottom: 0; z-index: 45; width: min(440px, 100%); max-height: none; border-radius: 0; border-left: 1px solid var(--line-strong); box-shadow: -16px 0 40px rgba(0, 0, 0, .45); transform: translateX(105%); visibility: hidden; transition: transform .22s ease, visibility .22s; }
+  .crew-detail.open { transform: none; visibility: visible; }
+  .sheet-close { display: inline-grid; position: absolute; top: var(--s3); right: var(--s3); }
+  .sheet-backdrop { display: block; position: fixed; inset: 0; z-index: 44; border: 0; background: rgba(3, 7, 9, .55); }
+}
+
+/* ───────── Cognitive battery ───────── */
+.tests th, .tests td { text-align: left; padding: var(--s3); border-bottom: 1px solid var(--line); vertical-align: middle; font-size: 14px; }
+.tests thead th { font-weight: 500; color: var(--text-3); font-size: 13px; border-top: 1px solid var(--line); }
+.tests tbody th { font-weight: 500; }
+.tests { min-width: 720px; }
+kbd { font-family: ui-monospace, Menlo, monospace; font-size: 12px; padding: 1px 6px; border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 4px; color: var(--text-2); background: var(--surface-2); }
+.cog-runner { max-width: 760px; }
+.cog-task { display: grid; gap: var(--s4); }
+.cog-task-head { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s3); }
+.cog-intro { display: grid; gap: var(--s3); }
+.code-key { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); border: 1px solid var(--line-strong); border-radius: var(--radius-sm); overflow: hidden; }
+.code-key span { display: grid; justify-items: center; padding: var(--s2) 0; border-right: 1px solid var(--line); }
+.code-key span:last-child { border-right: 0; }
+.code-key b { font-size: 20px; font-weight: 400; color: var(--accent-strong); }
+.code-key i { font-style: normal; font-weight: 600; font-variant-numeric: tabular-nums; }
+.cog-stage { min-height: 230px; display: grid; place-content: center; justify-items: center; gap: var(--s3); border-radius: var(--radius); background: var(--surface); border: 1px solid var(--line); }
+.cog-pair { display: inline-flex; align-items: center; gap: var(--s5); font-size: 44px; font-variant-numeric: tabular-nums; font-weight: 600; }
+.cog-pair b { font-weight: 400; color: var(--accent-strong); }
+.cog-math { font-size: 40px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+.cog-digit { font-size: 64px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1; }
+.msp-grid { display: grid; grid-template-columns: repeat(4, 30px); gap: 4px; }
+.msp-grid span { width: 30px; height: 30px; border-radius: 4px; background: var(--surface-3); }
+.msp-grid span.on { background: var(--accent); }
+.msp-choice { display: flex; gap: var(--s7); }
+.cog-choices { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
+.cog-choices .btn { justify-content: center; }
+@media (max-width: 600px) { .msp-grid { grid-template-columns: repeat(4, 22px); } .msp-grid span { width: 22px; height: 22px; } .msp-choice { gap: var(--s5); } .cog-pair, .cog-math { font-size: 32px; } }

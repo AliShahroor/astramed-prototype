@@ -1,5 +1,11 @@
 # Validation record · 14 November 2026
 
+## Cognitive battery and overview pass
+
+WinSCAT-style battery (CDS, CPT, MTH, MTS, CDD) with NASA-sourced task structure; My Health overview rewritten (status split into findings for review vs awaiting repeat, whole-number comparisons stated against the baseline value, radiation as % of the career limit, CO₂ against its limit); reaction-time explanation generated from the calculated values; slide-over crew detail on screens under 1100 px; the cycle-ergometer NASA video (3.8 MB) bundled and precached so it plays offline.
+
+Checks run: typecheck and lint passed; 18/18 unit tests; production build passed; Playwright 13/13 against a local production preview, including the battery (CDD locked until CDS, MTH scored 15/15 with keyboard input), the phone slide-over, and the bundled video reaching playable state with the network disabled.
+
 ## Operations and training pass
 
 Sidebar shell with Simulation and profile menus; environment-based theming; copy rewritten to interface language; crew operations dashboard (summary, roster, detail panel with shared trends, attention timeline, notifications, activity log, check-in requests); My Health readings grouped by system with a calculation view in the health card; Physical training library with NASA videos, checklists and session logging. State migration keeps earlier saved records.

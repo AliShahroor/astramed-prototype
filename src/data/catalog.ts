@@ -259,7 +259,6 @@ function makeBaseline(overrides: Partial<Record<Indicator, number>>) {
 }
 const NASA_HRP = "https://www.nasa.gov/hrp/hrp-videos/";
 const ECLIPS = "https://assets.science.nasa.gov/content/dam/science/cds/eclips/assets/videos";
-const HOW = "https://images-assets.nasa.gov/video/jsc2025m000002_How_Do_Astronauts_Exercise_in_Space_250106-MP4/jsc2025m000002_How_Do_Astronauts_Exercise_in_Space_250106-MP4";
 /**
  * Training library. Videos are NASA educational footage, embedded with attribution (verified 14 Nov 2026):
  * NASA video is generally not subject to US copyright; NASA must be credited and no endorsement implied.
@@ -315,7 +314,7 @@ export const activities: Activity[] = [
     ],
     steps: ["Clip in and secure restraint", "Set planned workload", "Complete planned duration", "Note heart-rate response and symptoms"],
     evidenceId: "exercise",
-    video: { kind: "mp4", src: `${HOW}~small.mp4`, track: "media/how-astronauts-exercise.en.vtt", crossOrigin: false, title: "How Do Astronauts Exercise in Space?", credit: "NASA", duration: "1:29", captions: "English captions (NASA)", shows: "Explains why ISS crews exercise about two hours a day and shows the harnessed treadmill, the vibration-isolated bike and the resistance machine.", page: "https://images.nasa.gov/details/jsc2025m000002_How_Do_Astronauts_Exercise_in_Space_250106-MP4", size: "17 MB" },
+    video: { kind: "mp4", src: "media/how-astronauts-exercise-mobile.mp4", track: "media/how-astronauts-exercise.en.vtt", crossOrigin: false, offline: true, title: "How Do Astronauts Exercise in Space?", credit: "NASA", duration: "1:29", captions: "English captions (NASA)", shows: "Explains why ISS crews exercise about two hours a day and shows the harnessed treadmill, the vibration-isolated bike and the resistance machine.", page: "https://images.nasa.gov/details/jsc2025m000002_How_Do_Astronauts_Exercise_in_Space_250106-MP4", size: "3.8 MB, stored in the app" },
   },
   {
     id: "mobility",

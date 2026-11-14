@@ -232,23 +232,21 @@ export function evaluate(
     }
     if (indicator === "reaction") {
       evidenceIds = ["measures", "pvt"];
-      explanation =
-        "NASA research motivates monitoring sleep and cognitive performance. Concurrent changes may be relevant, but do not identify a cause. This short browser task is not a validated PVT.";
       next =
         "Repeat the reaction-time assessment under comparable conditions and review recent sleep. If the change persists, request a crew medical check-in.";
-      const sleep = selectSeries(
-        rows,
-        astronaut.id,
-        scenario,
-        "sleep",
-        day,
-        range,
-      );
+      const sleep = selectSeries(rows, astronaut.id, scenario, "sleep", day, range);
       const sleepBase = astronaut.baseline.sleep.value;
       const recentSleep = sleep.at(-1);
-      explanation += recentSleep
-        ? ` Selected sleep context: ${recentSleep.value} h on day ${recentSleep.day}, versus ${sleepBase} h preflight (${percentageChange(recentSleep.value, sleepBase)?.toFixed(1)}%).`
-        : " Sleep data are missing in this window.";
+      const sleepPct = recentSleep ? percentageChange(recentSleep.value, sleepBase) : null;
+      const parts: string[] = [];
+      if (current && change !== null)
+        parts.push(`Reaction time on day ${current.day} was ${current.value.toFixed(0)} ms, ${Math.abs(change).toFixed(1)}% ${change >= 0 ? "slower" : "faster"} than your ${baseline} ms preflight baseline.`);
+      if (persistence > 1) parts.push(`It has been at least ${threshold}% slower on each of the last ${persistence} recorded days.`);
+      if (recentSleep && sleepPct !== null)
+        parts.push(`Sleep recorded on day ${recentSleep.day} was ${recentSleep.value} h against ${sleepBase} h before flight (${sleepPct >= 0 ? "+" : ""}${sleepPct.toFixed(1)}%).`);
+      else parts.push("No sleep data are available for this period.");
+      parts.push("NASA studies sleep loss as a risk to performance, but these readings do not show that one caused the other. The browser task is not a validated PVT.");
+      explanation = parts.join(" ");
       notify =
         status === "Review" &&
         persistence >= 3 &&

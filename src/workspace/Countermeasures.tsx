@@ -5,8 +5,10 @@ import { activities, astronauts } from "../data/catalog";
 import { evidenceFor } from "../data/evidence";
 import { Assessment } from "../components/Assessment";
 import { VideoPlayer } from "../components/VideoPlayer";
+import { CognitiveTask } from "../components/CognitiveTask";
+import { BASELINE_SESSIONS, ORDER, SCORED_TESTS, TESTS, personalBaseline } from "../engine/battery";
 import { dayTimestamp, evaluate, selectSeries } from "../engine/monitoring";
-import type { Activity, AssessmentResult, Completion, Measurement } from "../types";
+import type { Activity, AssessmentResult, CogResult, CogTest, Completion, Measurement } from "../types";
 import { useWs } from "./context";
 
 const TABS = [
@@ -173,9 +175,13 @@ function TrainingDetail({ a }: { a: Activity }) {
 }
 
 function Cognitive() {
-  const { state, setState, astronaut, mission, notify, speak, range } = useWs();
+  const { state, setState, astronaut, mission, notify, speak, range, open } = useWs();
+  const openEvidence = (id: string) => open({ type: "evidence", id });
+  const [active, setActive] = useState<CogTest | "RT" | null>(null);
   const series = selectSeries(mission.rows, astronaut.id, state.scenario, "reaction", state.day, 30);
   const mine = state.assessments.filter((r) => r.astronautId === astronaut.id && r.scenario === state.scenario);
+  const cog = state.cognitive.filter((r) => r.astronautId === astronaut.id);
+  const cdsToday = cog.some((r) => r.test === "CDS" && r.day === state.day && r.scenario === state.scenario);
   const save = (result: AssessmentResult) => {
     const reading: Measurement = {
       id: result.id, astronautId: astronaut.id, scenario: state.scenario, indicator: "reaction", unit: "ms", value: Number(result.median.toFixed(1)), day: state.day,
@@ -185,37 +191,98 @@ function Cognitive() {
     notify("Result saved. My Health and the crew status now use this assessment.");
     if (state.voice) speak(evaluate(astronaut, [...mission.rows, reading], state.scenario, "reaction", state.day, range));
   };
-  return (
-    <section aria-labelledby="cog-h" className="cog-grid">
-      <div>
-        <h2 id="cog-h" className="h2">Reaction-time assessment</h2>
-        <p className="muted small">Measures simple visual reaction time: the delay between a signal and your key press. Inspired by psychomotor vigilance testing; not the NASA PVT and not clinically validated.</p>
+  const saveCog = (r: CogResult) => {
+    setState((s) => ({ ...s, cognitive: [...s.cognitive, r] }));
+    const b = personalBaseline([...state.cognitive, r], r.test, astronaut.id);
+    notify(b.ready ? `${TESTS[r.test].name} saved.` : `${TESTS[r.test].name} saved. Personal baseline: ${b.sessions} of ${BASELINE_SESSIONS} sessions.`);
+  };
+  const last = (t: CogTest) => cog.filter((r) => r.test === t).sort((a, b) => b.timestamp.localeCompare(a.timestamp))[0];
+
+  if (active === "RT")
+    return (
+      <section className="cog-runner">
+        <div className="cog-task-head"><div><span className="label">Psychomotor speed</span><h2 className="h3">Simple reaction time (RT)</h2></div><button className="btn btn-link sm" onClick={() => setActive(null)}>All tests</button></div>
+        <p className="muted small">Measures the delay between a visual signal and your key press. Inspired by psychomotor vigilance testing; not the NASA PVT and not clinically validated. The result updates your reaction-time finding on My Health.</p>
         <Assessment key={`${astronaut.id}-${state.scenario}-${state.day}`} astronaut={astronaut} scenario={state.scenario} day={state.day} onSave={save} />
+      </section>
+    );
+  if (active)
+    return (
+      <section className="cog-runner">
+        <CognitiveTask key={`${active}-${astronaut.id}-${state.day}`} test={active} astronautId={astronaut.id} scenario={state.scenario} day={state.day} onSave={saveCog} onExit={() => setActive(null)} />
+      </section>
+    );
+
+  return (
+    <section aria-labelledby="cog-h">
+      <div className="section-head"><h2 id="cog-h" className="h2">Cognitive assessments</h2><button className="btn btn-link sm" onClick={() => setActive("RT")}>Reaction time only</button></div>
+      <p className="muted measure">
+        Five short tasks modelled on the structure of NASA’s WinSCAT battery, plus a simple reaction-time test. These are Code Blue browser re-creations,
+        not WinSCAT: they have no normative data and are not validated. Each result is compared only with your own first {BASELINE_SESSIONS} sessions.{" "}
+        <button className="btn btn-link inline" onClick={() => openEvidence("winscat")}>About WinSCAT</button>
+      </p>
+      <div className="table-wrap" role="region" aria-label="Cognitive tests" tabIndex={0}>
+        <table className="tests">
+          <thead><tr><th scope="col">Test</th><th scope="col">Measures</th><th scope="col">Last result</th><th scope="col">Personal baseline</th><th scope="col"><span className="sr-only">Start</span></th></tr></thead>
+          <tbody>
+            <tr>
+              <th scope="row">Simple reaction time <span className="mono muted">RT</span></th>
+              <td className="muted">Psychomotor speed</td>
+              <td>{mine.length ? `${mine.at(-1)!.median.toFixed(0)} ms median` : <span className="muted">Not run</span>}</td>
+              <td>{astronaut.baseline.reaction.value} ms (simulated preflight)</td>
+              <td className="right"><button className="btn btn-secondary sm" onClick={() => setActive("RT")}>Start</button></td>
+            </tr>
+            {ORDER.map((t) => {
+              const r = last(t);
+              const b = personalBaseline(state.cognitive, t, astronaut.id);
+              const scored = SCORED_TESTS.includes(t);
+              const locked = t === "CDD" && !cdsToday;
+              const delta = r?.throughput != null && b.throughput ? ((r.throughput - b.throughput) / b.throughput) * 100 : null;
+              return (
+                <tr key={t}>
+                  <th scope="row">{TESTS[t].name} <span className="mono muted">{t}</span></th>
+                  <td className="muted">{TESTS[t].domain}</td>
+                  <td>{r ? <>{r.accuracy.toFixed(0)}% correct · {r.throughput?.toFixed(1) ?? "—"}/min<small className="muted block">Day {r.day}</small></> : <span className="muted">Not run</span>}</td>
+                  <td>{!scored ? <span className="muted">Learning step, not compared</span> : b.ready ? <>{b.throughput!.toFixed(1)}/min{delta !== null && <small className={`block ${delta <= -10 ? "warn-text" : "muted"}`}>Latest {delta >= 0 ? "+" : ""}{delta.toFixed(0)}%</small>}</> : <span className="muted">Building: {b.sessions} of {BASELINE_SESSIONS}</span>}</td>
+                  <td className="right">
+                    <button className="btn btn-secondary sm" disabled={locked} title={locked ? "Run Code Substitution first today" : undefined} onClick={() => setActive(t)}>Start</button>
+                    {locked && <small className="muted block">Needs CDS today</small>}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
-      <div>
-        <h2 className="h2">Reaction-time record</h2>
-        <p className="muted small">Median latency, last 30 days to day {state.day}. Amber points are assessments taken in this app.</p>
-        <div className="mini-chart" role="img" aria-label={`Reaction-time latency, ${series.length} days, baseline ${astronaut.baseline.reaction.value} ms`}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={series} margin={{ top: 12, right: 12, bottom: 4, left: 0 }}>
-              <CartesianGrid vertical={false} stroke="var(--line)" />
-              <XAxis dataKey="day" tickFormatter={(d) => `Day ${d}`} tick={{ fill: "var(--text-2)", fontSize: 12 }} axisLine={false} tickLine={false} minTickGap={30} />
-              <YAxis width={56} tick={{ fill: "var(--text-2)", fontSize: 12 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} unit=" ms" />
-              <Tooltip contentStyle={{ background: "var(--surface-3)", border: "1px solid var(--line-strong)", borderRadius: 6, color: "var(--text)" }} labelFormatter={(d) => `Mission day ${d}`} formatter={(v, _n, item) => [`${v} ms`, (item?.payload as Measurement)?.source ?? "Latency"]} />
-              <ReferenceLine y={astronaut.baseline.reaction.value} stroke="var(--info)" strokeDasharray="5 4" />
-              <Line dataKey="value" stroke="var(--accent)" strokeWidth={2} isAnimationActive={false}
-                dot={(p: { cx?: number; cy?: number; payload?: Measurement; index?: number }) => <circle key={p.index} cx={p.cx} cy={p.cy} r={p.payload?.source === "Browser assessment" ? 5 : 0} fill="var(--warn)" />} />
-            </LineChart>
-          </ResponsiveContainer>
+      <p className="muted small">Order: CDS, CPT, MTH, MTS, then CDD (delayed recall of the CDS key). Throughput = estimated correct responses per minute. CPT also counts lapses (no response within 700 ms). A drop of 10% or more from your baseline is highlighted for your attention only; it is not a clinical threshold and does not create a finding.</p>
+
+      <div className="split">
+        <div>
+          <h3 className="h3 spaced">Reaction-time record</h3>
+          <div className="mini-chart" role="img" aria-label={`Reaction-time latency, ${series.length} days, baseline ${astronaut.baseline.reaction.value} ms`}>
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={series} margin={{ top: 12, right: 12, bottom: 4, left: 0 }}>
+                <CartesianGrid vertical={false} stroke="var(--line)" />
+                <XAxis dataKey="day" tickFormatter={(d) => `Day ${d}`} tick={{ fill: "var(--text-2)", fontSize: 12 }} axisLine={false} tickLine={false} minTickGap={30} />
+                <YAxis width={56} tick={{ fill: "var(--text-2)", fontSize: 12 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} unit=" ms" />
+                <Tooltip contentStyle={{ background: "var(--surface-3)", border: "1px solid var(--line-strong)", borderRadius: 6, color: "var(--text)" }} labelFormatter={(d) => `Mission day ${d}`} formatter={(v, _n, item) => [`${v} ms`, (item?.payload as Measurement)?.source ?? "Latency"]} />
+                <ReferenceLine y={astronaut.baseline.reaction.value} stroke="var(--info)" strokeDasharray="5 4" />
+                <Line dataKey="value" stroke="var(--accent)" strokeWidth={2} isAnimationActive={false}
+                  dot={(p: { cx?: number; cy?: number; payload?: Measurement; index?: number }) => <circle key={p.index} cx={p.cx} cy={p.cy} r={p.payload?.source === "Browser assessment" ? 5 : 0} fill="var(--warn)" />} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          <p className="muted small">Last 30 days. Dashed line: simulated preflight baseline. Amber points: tests run in this app.</p>
         </div>
-        <p className="muted small">Dashed line: baseline of {astronaut.baseline.reaction.value} ms from {astronaut.baseline.reaction.count} simulated preflight sessions.</p>
-        <h3 className="h3 spaced">Saved assessments</h3>
-        {mine.length === 0 ? <p className="empty">No assessments saved in this scenario yet.</p> : (
-          <table className="simple">
-            <thead><tr><th scope="col">Day</th><th scope="col">Median</th><th scope="col">Valid</th><th scope="col">Excluded</th></tr></thead>
-            <tbody>{[...mine].reverse().map((r) => <tr key={r.id}><td>{r.day}</td><td>{r.median.toFixed(0)} ms</td><td>{r.trials.length}</td><td>{r.falseStarts} early · {r.anticipatory ?? 0} anticipatory · {r.misses} missed</td></tr>)}</tbody>
-          </table>
-        )}
+        <div>
+          <h3 className="h3 spaced">Recent battery results</h3>
+          {cog.length === 0 ? <p className="empty">No battery results saved for {astronaut.name} yet.</p> : (
+            <table className="simple">
+              <thead><tr><th scope="col">Test</th><th scope="col">Day</th><th scope="col">Correct</th><th scope="col">Median RT</th><th scope="col">Throughput</th></tr></thead>
+              <tbody>{[...cog].reverse().slice(0, 10).map((r) => <tr key={r.id}><td className="mono">{r.test}</td><td>{r.day}</td><td>{r.correct}/{r.total}</td><td>{r.medianRt === null ? "—" : `${Math.round(r.medianRt)} ms`}</td><td>{r.throughput?.toFixed(1) ?? "—"}/min</td></tr>)}</tbody>
+            </table>
+          )}
+        </div>
       </div>
     </section>
   );

@@ -1,7 +1,7 @@
 import { ArrowRight, BookOpen, Plus, Target } from "lucide-react";
 import { hazardContext, hazards, metricFor, metrics } from "../data/catalog";
 import { evidenceFor } from "../data/evidence";
-import { dayTimestamp, doseUtilization, selectSeries } from "../engine/monitoring";
+import { doseUtilization, selectSeries } from "../engine/monitoring";
 import { TrendChart } from "../components/TrendChart";
 import type { Finding, Hazard, Indicator } from "../types";
 
@@ -32,8 +32,28 @@ export function changeText(f: Finding) {
   return f.change === null ? "No comparison" : `${f.change >= 0 ? "+" : ""}${f.change.toFixed(1)}% vs baseline`;
 }
 
+/** Overview figures: whole-number percentages and the comparison stated in words. Full precision stays in the health card. */
+function readingValue(f: Finding) {
+  const m = metricFor(f.indicator);
+  if (!f.current) return "—";
+  const v = f.current.value;
+  if (f.indicator === "strength") return <>{v.toFixed(0)}<span className="unit">% of preflight</span></>;
+  if (f.indicator === "radiation") return <>{v.toFixed(0)}<span className="unit"> mSv</span></>;
+  return <>{v.toFixed(m.decimals)}<span className="unit"> {m.unit}</span></>;
+}
+function readingContext(f: Finding) {
+  const m = metricFor(f.indicator);
+  if (!f.current) return "No reading";
+  if (f.indicator === "co2") return `Limit ${evidenceFor("co2").limit} mmHg (1 h average)`;
+  if (f.indicator === "radiation") return `${doseUtilization(f.current.value, f.current.unit)?.toFixed(0)}% of ${evidenceFor("radiation").limit} mSv career limit`;
+  if (f.indicator === "strength") return "Synthetic estimate";
+  if (f.change === null) return "No baseline";
+  const p = Math.round(f.change);
+  return p === 0 ? `Same as baseline ${f.baseline} ${m.unit}` : `${p > 0 ? "+" : "−"}${Math.abs(p)}% vs baseline ${f.baseline} ${m.unit}`;
+}
+
 export function MyHealth() {
-  const { astronaut, findings, state, range, setRange, indicator, setIndicator, hazard, setHazard, open, environment, mission } = useWs();
+  const { astronaut, findings, state, range, setRange, indicator, setIndicator, hazard, setHazard, open, mission } = useWs();
   const active = findings.filter((f) => f.status === "Review" || f.status === "Alert");
   const primary = active[0];
   const others = active.slice(1);
@@ -49,9 +69,15 @@ export function MyHealth() {
     if (!avail.some((m) => m.id === indicator)) setIndicator(avail[0].id);
   };
 
-  const summary = primary
-    ? `${active.length} ${active.length === 1 ? "observation needs" : "observations need"} your attention${alerts ? `, including ${alerts} reference ${alerts === 1 ? "exceedance" : "exceedances"}` : ""}.`
-    : `No prototype flags on mission day ${state.day}.`;
+  const confirmed = active.filter((f) => f.status === "Alert" || f.persistence >= 3);
+  const awaiting = active.length - confirmed.length;
+  const summary = !primary
+    ? `No findings on mission day ${state.day}.`
+    : [
+        alerts ? `${alerts} reference ${alerts === 1 ? "exceedance" : "exceedances"}` : "",
+        confirmed.length - alerts > 0 ? `${confirmed.length - alerts} ${confirmed.length - alerts === 1 ? "finding" : "findings"} for review` : "",
+        awaiting ? `${awaiting} awaiting a repeat measurement` : "",
+      ].filter(Boolean).join(" · ");
 
   return (
     <>
@@ -60,7 +86,7 @@ export function MyHealth() {
           <h2 id="status-h" className="sr-only">Monitoring status</h2>
           <p className="status-line">{summary}</p>
           <p className="muted small">
-            Personal comparisons over the last {range === 94 ? "full mission" : `${range} days`} · record of {dayTimestamp(state.day).slice(0, 10)} (simulated clock) · {environment.name}
+            Mission day {state.day} · compared with your preflight baseline over the last {range === 94 ? "94 days" : `${range} days`}
             {insufficient > 0 && ` · ${insufficient} ${insufficient === 1 ? "indicator" : "indicators"} without enough data`}
           </p>
         </div>
@@ -84,8 +110,8 @@ export function MyHealth() {
                       <button className="link-plain" onClick={() => { setHazard("All hazards"); setIndicator(id); document.getElementById("trends")?.scrollIntoView({ behavior: "smooth" }); }}>{m.short}</button>
                     </dt>
                     <dd>
-                      <span className="reading-value">{f.current ? f.current.value.toFixed(m.decimals) : "—"}<span className="unit"> {m.unit}</span></span>
-                      <span className={`reading-delta ${f.status === "Alert" ? "alert" : flagged ? "warn" : ""}`}>{changeText(f)}</span>
+                      <span className="reading-value">{readingValue(f)}</span>
+                      <span className={`reading-delta ${f.status === "Alert" ? "alert" : flagged ? "warn" : ""}`}>{readingContext(f)}</span>
                     </dd>
                   </div>
                 );

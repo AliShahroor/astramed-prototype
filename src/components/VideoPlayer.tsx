@@ -23,18 +23,20 @@ export function VideoPlayer({ video, onWatched }: { video: TrainingVideo; onWatc
   const [failed, setFailed] = useState(false);
   const reported = useRef(false);
   useEffect(() => { setStarted(false); setFailed(false); reported.current = false; }, [video]);
+  const local = video.kind === "mp4" && !!video.offline;
+  const url = (u: string) => (u.startsWith("http") ? u : `${import.meta.env.BASE_URL}${u}`);
   const watched = () => { if (!reported.current) { reported.current = true; onWatched(); } };
 
   const attribution = (
     <p className="video-credit">
       Video: {video.credit} · “{video.title}” · {video.duration}
-      {video.kind === "mp4" ? ` · ${video.size}` : ""} · {video.captions}.{" "}
+      {video.kind === "mp4" ? ` · ${video.size}` : ""} · {video.captions}{local ? " · available offline" : " · streams from NASA"}.{" "}
       <a href={video.page} target="_blank" rel="noreferrer">Source page <ExternalLink size={12} aria-hidden="true" /></a>
       <span className="block muted">Shows: {video.shows} NASA educational footage; use does not imply NASA endorsement of ASTRAMED.</span>
     </p>
   );
 
-  if (!online || failed)
+  if ((!online && !local) || failed)
     return (
       <figure className="video">
         <div className="video-frame unavailable" role="status">
@@ -78,8 +80,8 @@ export function VideoPlayer({ video, onWatched }: { video: TrainingVideo; onWatc
             onEnded={watched}
             aria-label={`${video.title}, ${video.credit}`}
           >
-            <source src={video.src} type="video/mp4" onError={() => setFailed(true)} />
-            {video.track && <track kind="captions" srcLang="en" label="English" src={video.track.startsWith("http") ? video.track : `${import.meta.env.BASE_URL}${video.track}`} default />}
+            <source src={url(video.src)} type="video/mp4" onError={() => setFailed(true)} />
+            {video.track && <track kind="captions" srcLang="en" label="English" src={url(video.track)} default />}
           </video>
         </div>
       )}

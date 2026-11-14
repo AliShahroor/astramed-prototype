@@ -30,3 +30,11 @@ Checked 14 November 2026 against the NASA Images and Media Usage Guidelines (htt
 | Cycle ergometer training | “How Do Astronauts Exercise in Space?” (1:29) | NASA | images-assets.nasa.gov MP4 (`~small`, 17 MB) | NASA SRT converted to `public/media/how-astronauts-exercise.en.vtt` | Narrated overview of treadmill, vibration-isolated bike and resistance machine; hardware is not named in the narration. |
 
 The checklists and instructions beside each video are Code Blue demonstration content, not NASA exercise prescriptions.
+
+## Cognitive battery (Countermeasures → Cognitive assessment)
+
+| App feature | NASA resource | What it supports | Limitations |
+|---|---|---|---|
+| Five tasks modelled on WinSCAT (CDS, CPT, MTH, MTS, CDD) | Seaton et al., NASA JSC report, [NTRS 20080009715](https://ntrs.nasa.gov/api/citations/20080009715/downloads/20080009715.pdf) Table I; NASA JSC/KBRwyle poster [NTRS 20180003970](https://ntrs.nasa.gov/api/citations/20180003970/downloads/20180003970.pdf) | Task structure and order (CDD last), 5 s MTS delay, median response time, accuracy, throughput, CPT lapses (> 700 ms), comparison with the astronaut’s own baseline; WinSCAT is taken every 30 days on ISS by long-duration crew | Code Blue re-creations, not WinSCAT/ANAM; shorter trial counts (CPT 20 vs 160 in WinSCAT); no norms; operational cutoffs are not published and none are used. The abbreviation for Delayed Matching to Sample in NASA sources is **MTS** (not MSP). |
+
+Personal baseline = median throughput of the first 3 saved sessions per test. A drop of 10% or more is highlighted for the user only (Code Blue display choice, not a clinical threshold, no finding created). CDS is a learning step and is not compared.

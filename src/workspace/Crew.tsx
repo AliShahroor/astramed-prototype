@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Lock } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Lock, X } from "lucide-react";
 import { Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { activities, astronauts, metricFor } from "../data/catalog";
 import { CABIN_ID, CREW_WINDOW_DAYS } from "../app/useMission";
@@ -19,11 +19,19 @@ export function Crew() {
   const ws = useWs();
   const { state, mission, astronaut } = ws;
   const [selectedId, setSelected] = useState(astronaut.id);
-  // On narrow screens the detail panel sits below the roster; bring it into view on selection.
+  // Below 1100 px the detail panel is a slide-over sheet opened by selecting a crew member.
+  const [sheet, setSheet] = useState(false);
   const setSelectedId = (id: string) => {
     setSelected(id);
-    if (window.innerWidth < 1100) requestAnimationFrame(() => document.querySelector(".crew-detail")?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    setSheet(true);
   };
+  useEffect(() => {
+    if (!sheet) return;
+    const key = (e: KeyboardEvent) => { if (e.key === "Escape") setSheet(false); };
+    document.addEventListener("keydown", key);
+    if (window.innerWidth < 1100) requestAnimationFrame(() => (document.querySelector(".crew-detail .sheet-close") as HTMLElement | null)?.focus());
+    return () => document.removeEventListener("keydown", key);
+  }, [sheet]);
   const selected = astronauts.find((a) => a.id === selectedId) ?? astronaut;
   const notes = state.notifications.filter((n) => n.scenario === state.scenario && n.day <= state.day);
   const unacked = notes.filter((n) => !n.acknowledged);
@@ -82,7 +90,8 @@ export function Crew() {
           <Notifications notes={notes} onReview={setSelectedId} />
           <ActivityLog />
         </div>
-        <CrewDetail a={selected} active={active(selected.id)} pending={pendingFor(selected.id)} />
+        {sheet && <button className="sheet-backdrop" aria-label="Close crew member details" onClick={() => setSheet(false)} />}
+        <CrewDetail a={selected} active={active(selected.id)} pending={pendingFor(selected.id)} open={sheet} onClose={() => setSheet(false)} />
       </div>
     </>
   );
@@ -104,7 +113,7 @@ function SharedStatus({ a, active, pending }: { a: Astronaut; active: Finding[];
   return <StatusTag status="Nominal" />;
 }
 
-function CrewDetail({ a, active, pending }: { a: Astronaut; active: Finding[]; pending: CrewNotification[] }) {
+function CrewDetail({ a, active, pending, open: isOpen, onClose }: { a: Astronaut; active: Finding[]; pending: CrewNotification[]; open: boolean; onClose: () => void }) {
   const { state, setState, astronaut, mission, notify, update, open } = useWs();
   const self = a.id === astronaut.id;
   const c = lastCheckin(state, a.id);
@@ -119,7 +128,8 @@ function CrewDetail({ a, active, pending }: { a: Astronaut; active: Finding[]; p
     notify(`Check-in request sent to ${a.name} (in-app only).`);
   };
   return (
-    <aside className="crew-detail" aria-labelledby="detail-h">
+    <aside className={isOpen ? "crew-detail open" : "crew-detail"} aria-labelledby="detail-h">
+      <button className="icon-btn sheet-close" onClick={onClose} aria-label="Close crew member details"><X size={18} aria-hidden="true" /></button>
       <div className="detail-head">
         <span className="avatar lg" aria-hidden="true">{a.initials}</span>
         <div>

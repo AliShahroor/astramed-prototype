@@ -39,7 +39,8 @@ The optional voice setting reads the same deterministic finding. Reset and JSON 
 - Entry flow: welcome → demo access → mission briefing (skippable per profile) → My Health.
 - Three responsive sections: Personal Health Overview, Crew Health & Operations, and Exercise & Cognitive Assessments.
 - Crew operations dashboard: summary, roster, crew-member detail with shared 14-day wellness trends (only for profiles that share), attention timeline recalculated per day, notification table with acknowledge/dismiss/review, check-in requests and an activity log.
-- Physical training library with attributed NASA videos (see the evidence mapping), demonstration checklists and a separate session log; watching, checklist completion and recorded sessions are tracked separately.
+- Cognitive battery of five tasks modelled on NASA’s WinSCAT (Code Substitution, Running Memory CPT, Mathematical Processing, Delayed Matching to Sample, Code Substitution Delayed) plus simple reaction time, each with practice, keyboard input, accuracy, median response time, throughput and a personal baseline built from the first three sessions.
+- Physical training library with attributed NASA videos (one bundled so it plays offline) (see the evidence mapping), demonstration checklists and a separate session log; watching, checklist completion and recorded sessions are tracked separately.
 - Four fictional astronauts, 94 days of deterministic history and three scenarios.
 - Global astronaut, day and environment selectors; four time windows and five hazard filters.
 - Ten scalar indicators, including both blood-pressure components; charts with baselines, tooltips and a keyboard-accessible data table.

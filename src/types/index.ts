@@ -129,6 +129,29 @@ export interface AssessmentResult {
   anticipatory?: number;
   median: number;
 }
+export type CogTest = "CDS" | "CDD" | "MTS" | "MTH" | "CPT";
+export interface CogTrial {
+  /** null = no response before the trial timed out */
+  correct: boolean | null;
+  rtMs: number;
+}
+export interface CogResult {
+  id: string;
+  test: CogTest;
+  astronautId: string;
+  scenario: Scenario;
+  day: number;
+  timestamp: string;
+  protocol: string;
+  trials: CogTrial[];
+  correct: number;
+  total: number;
+  accuracy: number;
+  medianRt: number | null;
+  throughput: number | null;
+  /** CPT only: responses slower than 700 ms or missing */
+  lapses?: number;
+}
 export interface CrewNotification {
   id: string;
   astronautId: string;
@@ -145,7 +168,7 @@ export interface CrewNotification {
 }
 export type TrainingVideo =
   | { kind: "youtube"; id: string; title: string; credit: string; duration: string; captions: string; shows: string; page: string }
-  | { kind: "mp4"; src: string; track?: string; crossOrigin: boolean; title: string; credit: string; duration: string; captions: string; shows: string; page: string; size: string };
+  | { kind: "mp4"; src: string; track?: string; crossOrigin: boolean; offline?: boolean; title: string; credit: string; duration: string; captions: string; shows: string; page: string; size: string };
 export interface Activity {
   id: string;
   title: string;
@@ -190,6 +213,7 @@ export interface AppState {
   voice: boolean;
   session: Session;
   videoViews: VideoView[];
+  cognitive: CogResult[];
   /** checked demonstration-checklist steps, keyed scenario-astronaut-activity-day */
   checklists: Record<string, number[]>;
 }

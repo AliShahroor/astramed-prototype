@@ -47,7 +47,7 @@ test("entry: welcome, profile selection, briefing, workspace; briefing skipped o
 test("direct links open the workspace without blocking", async ({ page }) => {
   await page.goto("./#/countermeasures/cognitive");
   await expect(title(page, "Exercise & Cognitive Assessments")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Reaction-time assessment" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Cognitive assessments", exact: true })).toBeVisible();
   await page.goto("./#/crew");
   await expect(title(page, "Crew Health & Operations")).toBeVisible();
 });
@@ -139,6 +139,7 @@ test("physical training: video, checklist and session are tracked separately", a
 
 test("real assessment: early trial excluded, five valid trials saved to health", async ({ page }) => {
   await page.goto("./#/countermeasures/cognitive");
+  await page.getByRole("button", { name: "Reaction time only" }).click();
   await page.getByRole("button", { name: "Start practice" }).click();
   await page.getByRole("button", { name: "Wait for the signal…" }).click();
   await expect(page.getByText("Too early.", { exact: false })).toBeVisible();
@@ -155,6 +156,44 @@ test("real assessment: early trial excluded, five valid trials saved to health",
   await page.locator(".indicator", { hasText: "Reaction time" }).click();
   await page.getByRole("button", { name: "Explain this indicator" }).click();
   await expect(page.getByRole("dialog")).toContainText("Browser assessment");
+});
+
+test("cognitive battery: CDD locked until CDS, MTH run and saved with throughput", async ({ page }) => {
+  await page.goto("./#/countermeasures/cognitive");
+  const row = (t: string) => page.locator(`table.tests tbody tr:has(th .mono:text-is("${t}"))`);
+  await expect(row("CDD").getByRole("button", { name: "Start" })).toBeDisabled();
+  await row("MTH").getByRole("button", { name: "Start" }).click();
+  await page.getByRole("button", { name: "Skip practice" }).click();
+  for (let i = 0; i < 15; i++) {
+    await expect(page.getByRole("button", { name: /Less than 5/ })).toBeEnabled({ timeout: 4000 });
+    const text = await page.locator(".cog-math").innerText();
+    const v = Function(`return ${text.replace(/−/g, "-")}`)() as number;
+    await page.keyboard.press(v < 5 ? "f" : "j");
+  }
+  await expect(page.getByText("15 of 15 correct")).toBeVisible();
+  await page.getByRole("button", { name: "Save result" }).click();
+  await page.getByRole("button", { name: "All tests" }).click();
+  await expect(row("MTH")).toContainText("100% correct");
+  await expect(row("MTH")).toContainText("Building: 1 of 3");
+  await row("CDS").getByRole("button", { name: "Start" }).click();
+  await expect(page.getByLabel("Code key")).toBeHidden();
+  await page.getByRole("button", { name: "Skip practice" }).click();
+  await expect(page.getByLabel("Code key")).toBeVisible();
+  for (let i = 0; i < 18; i++) { await expect(page.getByRole("button", { name: /^Match/ })).toBeEnabled({ timeout: 4000 }); await page.keyboard.press("f"); }
+  await page.getByRole("button", { name: "Save result" }).click();
+  await page.getByRole("button", { name: "All tests" }).click();
+  await expect(row("CDD").getByRole("button", { name: "Start" })).toBeEnabled();
+});
+
+test("crew detail opens as a slide-over sheet on phones", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("./#/crew");
+  await expect(page.locator(".crew-detail")).toBeHidden();
+  await page.locator(".who-btn", { hasText: "Maya Chen" }).click();
+  await expect(page.locator(".crew-detail")).toBeVisible();
+  await expect(page.locator(".crew-detail")).toContainText("Maya Chen");
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".crew-detail")).toBeHidden();
 });
 
 test("form validation and restart from the profile menu", async ({ page }) => {
@@ -205,7 +244,12 @@ test("offline: workspace, evidence and assessment work; uncached video shows una
   await nav(page, "Countermeasures").click();
   await expect(page.getByText("Video unavailable")).toBeVisible();
   await expect(page.getByText("not stored for offline use")).toBeVisible();
+  await page.locator(".training-item", { hasText: "Cycle ergometer" }).click();
+  await expect(page.locator(".video-credit")).toContainText("available offline");
+  await page.getByRole("button", { name: /Play video/ }).click();
+  await expect.poll(() => page.evaluate(() => document.querySelector("video")?.readyState ?? 0), { timeout: 10000 }).toBeGreaterThanOrEqual(2);
   await page.getByRole("link", { name: "Cognitive assessment" }).click();
+  await page.getByRole("button", { name: "Reaction time only" }).click();
   await page.getByRole("button", { name: "Start practice" }).click();
   await respond(page);
   await expect(page.getByRole("button", { name: "Begin recorded assessment" })).toBeVisible();

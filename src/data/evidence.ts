@@ -89,6 +89,20 @@ export const evidence: Evidence[] = [
       "Generic activity demonstrations are not astronaut-approved protocols or individualized prescriptions.",
     verified: true,
   },
+  {
+    id: "winscat",
+    agency: "NASA",
+    title: "WinSCAT · Spaceflight Cognitive Assessment Tool",
+    url: "https://ntrs.nasa.gov/api/citations/20080009715/downloads/20080009715.pdf",
+    version: "NASA JSC technical report (Seaton et al., c. 2008), Table I; NASA JSC/KBRwyle poster 20180003970",
+    section: "Subtest descriptions (Table I) and operational use",
+    type: "research",
+    statement:
+      "WinSCAT is a NASA JSC self-administered battery of five two-choice subtests (Code Substitution, Running Memory CPT, Mathematical Processing, Delayed Matching to Sample, Code Memory Delayed), taken every 30 days on ISS by long-duration crew and compared with the astronaut’s own baseline. ASTRAMED re-creates the task structure only.",
+    limitations:
+      "ASTRAMED’s tasks are not WinSCAT or ANAM, use different trial counts and timing, and have no normative data or operational cutoffs (which are not published). Results are compared only with the user’s own first sessions; no finding is created.",
+    verified: true,
+  },
 ];
 export function evidenceFor(id: string) {
   return evidence.find((e) => e.id === id)!;
