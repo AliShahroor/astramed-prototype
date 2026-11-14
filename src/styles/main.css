@@ -629,6 +629,85 @@ kbd { font-family: ui-monospace, Menlo, monospace; font-size: 12px; padding: 1px
 .cog-choices .btn { justify-content: center; }
 @media (max-width: 600px) { .msp-grid { grid-template-columns: repeat(4, 22px); } .msp-grid span { width: 22px; height: 22px; } .msp-choice { gap: var(--s5); } .cog-pair, .cog-math { font-size: 32px; } }
 
+/* ═════════ Environment backdrop + frosted glass ═════════
+   A 4K photo per environment sits behind everything and cross-fades when the
+   environment changes. UI surfaces become translucent "glass" so the photo
+   shows through while text stays readable. Glass tints are derived from the
+   existing per-environment surface tokens via color-mix, so they re-tint
+   automatically with [data-env] — no per-environment duplication needed. */
+:root {
+  --glass:        color-mix(in srgb, var(--surface)    56%, transparent);
+  --glass-2:      color-mix(in srgb, var(--surface-2)  60%, transparent);
+  --glass-strong: color-mix(in srgb, var(--surface-2)  84%, transparent);
+  --glass-line:   color-mix(in srgb, var(--line-strong) 68%, transparent);
+  --blur: 16px;
+}
+
+/* Backdrop layers */
+.envbg { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; }
+.envbg__layer {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center; background-repeat: no-repeat;
+  opacity: 0; transition: opacity .9s ease; will-change: opacity;
+}
+.envbg--mars  { background-image: url(/bg/mars.jpg); }
+.envbg--orbit { background-image: url(/bg/orbit.jpg); }
+.envbg--moon  { background-image: url(/bg/moon.jpg); }
+.envbg--earth { background-image: url(/bg/earth.jpg); }
+:root[data-env="mars"]  .envbg--mars,
+:root[data-env="orbit"] .envbg--orbit,
+:root[data-env="moon"]  .envbg--moon,
+:root[data-env="earth"] .envbg--earth,
+:root:not([data-env])   .envbg--mars { opacity: 1; }
+/* Readability scrim: darker top and bottom, plus a soft vignette. */
+.envbg__scrim {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(130% 100% at 50% 0%, transparent 0%, rgba(4, 7, 10, .30) 72%),
+    linear-gradient(180deg, rgba(4, 7, 10, .66) 0%, rgba(4, 7, 10, .44) 30%, rgba(4, 7, 10, .52) 64%, rgba(4, 7, 10, .84) 100%);
+}
+
+/* Let the backdrop show: body transparent, content area lightly tinted for dense data. */
+body { background: transparent; }
+.page { background: color-mix(in srgb, var(--bg) 20%, transparent); }
+
+/* Chrome */
+.sidebar {
+  background: var(--glass); border-right-color: var(--glass-line);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.2);
+          backdrop-filter: blur(var(--blur)) saturate(1.2);
+}
+.topbar {
+  background: var(--glass-strong); border-bottom-color: var(--glass-line);
+  -webkit-backdrop-filter: blur(var(--blur)) saturate(1.2);
+          backdrop-filter: blur(var(--blur)) saturate(1.2);
+}
+
+/* Panels / cards */
+.finding, .callout, .crew-detail, .assessment-result, .cog-stage, .no-video,
+.notice-block, .video-frame.unavailable, .trajectory, .privacy-box, .calc-line {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(13px) saturate(1.15);
+          backdrop-filter: blur(13px) saturate(1.15);
+}
+
+/* Floating overlays — a touch more opaque so content stays crisp */
+.menu, .toast, .dialog, .dialog-head, .chart-tip {
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+          backdrop-filter: blur(18px) saturate(1.2);
+}
+.dialog { border-color: var(--glass-line); }
+
+/* Older browsers without backdrop-filter: fall back to the opaque tokens. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .sidebar, .finding, .callout, .crew-detail, .assessment-result, .cog-stage,
+  .no-video, .notice-block, .video-frame.unavailable, .trajectory, .privacy-box,
+  .calc-line { background: var(--surface); }
+  .topbar, .menu, .toast, .dialog, .dialog-head, .chart-tip { background: var(--surface-2); }
+  .page { background: var(--bg); }
+}
+
 /* Crew check-ins */
 .due { display: inline-block; margin-left: var(--s2); padding: 0 6px; border-radius: 999px; font-size: 12px; font-weight: 600; vertical-align: 1px; }
 .due.due { color: var(--warn); background: rgba(229, 176, 79, .1); }

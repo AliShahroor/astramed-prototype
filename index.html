@@ -13,6 +13,14 @@
     <title>ASTRAMED · Mission health</title>
   </head>
   <body>
+    <!-- Mission environment backdrop: one 4K layer per environment, cross-faded via [data-env] on <html>. -->
+    <div class="envbg" aria-hidden="true">
+      <div class="envbg__layer envbg--mars"></div>
+      <div class="envbg__layer envbg--orbit"></div>
+      <div class="envbg__layer envbg--moon"></div>
+      <div class="envbg__layer envbg--earth"></div>
+      <div class="envbg__scrim"></div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
