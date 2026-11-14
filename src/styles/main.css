@@ -2506,6 +2506,7 @@ details p {
   margin-top: 24px;
 }
 .activity-week li {
+  min-height: 110px;
   display: flex;
   flex-direction: column;
   align-items: center;

@@ -208,8 +208,8 @@ function Cognitive() {
       <div>
         <h2 className="h2">Your reaction-time record</h2>
         <p className="muted small">
-          Last 30 days up to day {state.day}. Highlighted points come from
-          assessments run in this app.
+          Latency in milliseconds (ms), last 30 days up to day {state.day}.
+          Highlighted points come from assessments run in this app.
         </p>
         <div
           className="mini-chart"
@@ -236,7 +236,6 @@ function Cognitive() {
                 axisLine={false}
                 tickLine={false}
                 domain={["auto", "auto"]}
-                unit=" ms"
               />
               <Tooltip
                 contentStyle={{
@@ -400,7 +399,7 @@ function Progress() {
               <li key={d}>
                 <span
                   className="activity-bar"
-                  style={{ height: `${16 + count * 16}px` }}
+                  style={{ height: `${count * 20}px` }}
                   aria-hidden="true"
                 />
                 <strong>{count}</strong>

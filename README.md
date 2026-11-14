@@ -1,10 +1,10 @@
 # ASTRAMED
 
-**Understand the change. Inspect the evidence. Make the next check.**
+Astronaut Health Monitoring System · Team Code Blue
 
 ASTRAMED is Team Code Blue’s local-first astronaut health-monitoring and decision-support prototype, developed for the brief “Create Health Monitoring Software for Astronauts on Space Missions.” It uses fictional adults and reproducible synthetic measurements. It does not diagnose disease, prescribe treatment, determine fitness for duty, or replace flight surgeons.
 
-![ASTRAMED personal health overview](docs/validation/overview-1280.png)
+![ASTRAMED Crew Health & Operations](docs/validation/redesign/crew-1280.png)
 
 ## Run locally
 
@@ -28,21 +28,21 @@ Open http://127.0.0.1:4173, allow its service worker to finish installing, and l
 
 ## The demonstration
 
-Start with Alex Morgan, Mars transit, mission day 94, scenario B. The current synthetic reaction-time latency of 351 ms is compared with a seeded 285 ms baseline, yielding a calculated +23.2% change. Inspect the Health Card for the exact rule, persistence, sleep context, limitations and local NASA evidence record. Run the short reaction-response assessment in Countermeasures → Cognitive, save the result, and return to My Health to inspect the updated finding. Crew shows limited statuses and deduplicated local check-in notifications. Scenario C changes the underlying cabin one-hour CO₂ average to 4.1 mmHg; the app calculates its 1.1 mmHg exceedance of the pinned 3 mmHg reference.
+The welcome screen offers **Enter Mission System** (profile selection → mission briefing → workspace) and **Quick Demo**. The default is Alex Morgan, Mars transit, mission day 94, scenario B. Returning profiles can remember their briefing preference. Hash links such as `#/crew` and `#/countermeasures/cognitive` open directly. The profile menu supports switching, returning to selection and signing out while retaining records. The current synthetic reaction-time latency of 351 ms is compared with a seeded 285 ms baseline, yielding a calculated +23.2% change. Inspect the Health Card for the exact rule, persistence, sleep context, limitations and local NASA evidence record. Run the short reaction-response assessment in Countermeasures → Cognitive, save the result, and return to My Health to inspect the updated finding. Crew provides a roster, derived operational totals, shared detail panels, notifications with acknowledgement/dismissal, coordination requests, seven-day check-in coverage and saved activity history. No check-ins are fabricated or seeded. Scenario C changes the underlying cabin one-hour CO₂ average to 4.1 mmHg; the app calculates its 1.1 mmHg exceedance of the pinned 3 mmHg reference.
 
-The optional voice setting reads the same deterministic finding. Reset and JSON export are under Demo & preferences.
+The optional voice setting reads the same deterministic finding. Scenario selection, mission-day replay, reset and JSON export are under **Demo & preferences** (also available through the profile menu or footer). Environment context remains in the header. Reset requires a confirmation; sign-out preserves records.
 
 ## Implemented features
 
-- Three responsive sections: My Health, Crew and Countermeasures.
+- Welcome, fictional profile selection and mission briefing, followed by My Health, Crew and Countermeasures.
 - Four fictional astronauts, 94 days of deterministic history and three scenarios.
-- Global astronaut, day and environment selectors; four time windows and five hazard filters.
+- Profile/session menu, secondary simulation controls, four time windows and five hazard filters.
 - Ten scalar indicators, including both blood-pressure components; charts with baselines, tooltips and a keyboard-accessible data table.
 - Calculated Explainable Health Cards, local evidence viewer and original NASA source links.
 - Validated manual readings with timestamp/unit metadata and locally saved results.
 - Actual reaction-response timing, practice, five valid trials, false-start/timeout/hidden-tab exclusion, median aggregation and updated personal findings.
-- Privacy-conscious shared crew view, simulated acknowledgements and check-ins.
-- Illustrative activity checklists, completion totals, day streaks and assessment history.
+- Roster-based Crew operations with saved check-ins, support requests, acknowledgement history, shared detail panels and coverage timeline. Limited-sharing profiles omit personal status and activity details.
+- Illustrative activity checklists with equipment context, completion totals, activity frequency, mission-day streaks and chronological assessment/activity history.
 - Optional speech synthesis, local export/reset, versioned production service-worker caching.
 
 ## Scientific sources and data provenance
@@ -55,7 +55,7 @@ The sleep, reaction-time and heart-rate percentage rules are **unvalidated Code 
 
 ## Stack and architecture
 
-React 19, TypeScript, Vite, Tailwind CSS 4, Lucide and Recharts. Styling, icons and evidence are packaged locally, without external fonts. Domain calculations live outside presentation code. Browser localStorage persists prototype state. Native dialog provides modal focus handling; the task uses performance.now() and browser animation scheduling.
+React 19, TypeScript, Vite, Tailwind CSS 4, Lucide and Recharts. Styling, Inter fonts, icons and evidence are packaged locally; no third-party font requests are required. Domain calculations live outside presentation code. Browser localStorage persists prototype state. Native dialog provides modal focus handling; the task uses performance.now() and browser animation scheduling.
 
 See [architecture](docs/implementation/architecture.md), [methodology](docs/implementation/methodology.md), [synthetic data](docs/implementation/synthetic-data.md), [limitations](docs/implementation/limitations.md), and [AI disclosure](docs/submission/ai-disclosure.md).
 
@@ -68,7 +68,7 @@ npm run build
 npm run test:e2e
 ```
 
-The Playwright configuration uses locally installed Google Chrome (`channel: chrome`). Install Chrome or change that configuration to a Playwright Chromium installation (`npx playwright install chromium`). Browser tests launch the production preview on port 4173. They include a real timed five-trial response sequence, storage round trip, scenarios, crew actions, responsive screenshots, accessibility scans and an offline reload. Results and limits are in [the validation record](docs/validation/results.md). Screenshots are generated by the responsive browser test.
+The Playwright configuration uses locally installed Google Chrome (`channel: chrome`). Install Chrome or change that configuration to a Playwright Chromium installation (`npx playwright install chromium`). Browser tests launch the production preview on port 4173. They include a real timed five-trial response sequence, storage round trip, scenarios, crew actions, responsive screenshots, accessibility scans and an offline reload. Original release results are in [the validation record](docs/validation/results.md); the overhaul has a separate [review and validation record](docs/validation/redesign-review.md). Screenshots are generated by the responsive browser test.
 
 ## Deployment
 
@@ -79,3 +79,7 @@ The build is a static `dist/` directory. With a GitHub/Vercel account, publish t
 ## Team and disclosure
 
 Team Code Blue · ASTRAMED. AI-assisted code, design, documentation and synthetic data generation are disclosed in [ai-disclosure.md](docs/submission/ai-disclosure.md). No NASA marks, generated astronaut images, model training claim or NASA endorsement are used. The prototype needs independent engineering, scientific and clinical review before any operational use.
+
+## Isolated overhaul review
+
+The product overhaul is on branch `redesign/operations-overhaul`, in a separate Git worktree created at the user’s request because another editor was working in the original folder. The branch is locally committed; it has not replaced the other checkout or the public deployment. See the review record for actual checks and integration notes.
