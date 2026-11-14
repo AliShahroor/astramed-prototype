@@ -6,6 +6,7 @@ import { activities, astronauts, environments, metricFor, mission as missionInfo
 import { CABIN_ID, CREW_WINDOW_DAYS } from "../app/useMission";
 import { usePersisted } from "../app/usePersisted";
 import { dayTimestamp, evaluateAll, selectSeries } from "../engine/monitoring";
+import { sessionStreak } from "../engine/session";
 import type { AppState, Astronaut, CrewNotification, Finding, Indicator, Measurement, Status } from "../types";
 import { StatusTag, useWs } from "./context";
 import { CHECKIN, CHECKIN_STATUS, checkinState, checkinsFor, nowTime, time, when, type Entry } from "./crewData";
@@ -74,36 +75,52 @@ export function Crew() {
               <h2 id="roster-h" className="h2">Crew</h2>
               <span className="muted small"><Lock size={12} aria-hidden="true" /> Crewmates see status and check-ins, not measurements</span>
             </div>
-            <table className="roster">
-              <thead><tr><th scope="col">Crew member</th><th scope="col">Status</th><th scope="col">Check-in</th></tr></thead>
-              <tbody>
-                {astronauts.map((a) => {
-                  const c = checkinState(entries, a.id, state.day);
-                  const asked = openRequest(state, astronaut.id, a.id);
-                  const concern = visible(state).find((n) => isConcern(n) && !n.acknowledged && n.astronautId === a.id);
-                  return (
-                    <tr key={a.id} className={a.id === selected.id ? "selected" : ""} onClick={() => select(a.id)}>
-                      <th scope="row">
-                        <button className="who-btn" aria-pressed={a.id === selected.id} onClick={(e) => { e.stopPropagation(); select(a.id); }}>
-                          <span className="avatar sm" aria-hidden="true">{a.initials}</span>
-                          <span>{a.name}{a.id === astronaut.id && <em className="you"> · you</em>}<small>{a.role}</small></span>
-                        </button>
-                      </th>
-                      <td><SharedStatus a={a} findings={findingsOf(a.id)} /></td>
-                      <td>
-                        <span className="nowrap">{c.last ? when(c.last, state.day) : "No check-in"}</span>
-                        <small className="block muted">
-                          {concern ? <span className="tone warn">{CHECKIN_STATUS[c.last?.status ?? "talk"]}</span>
-                            : asked ? "Requested by you"
-                            : c.due === "done" ? CHECKIN_STATUS[c.last!.status]
-                            : <span className={c.due === "overdue" ? "tone alert" : "tone warn"}>{c.due === "overdue" ? "Overdue" : "Due today"}</span>}
-                        </small>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <ul className="roster crew-cards">
+              {astronauts.map((a) => {
+                const c = checkinState(entries, a.id, state.day);
+                const asked = openRequest(state, astronaut.id, a.id);
+                const concern = visible(state).find((n) => isConcern(n) && !n.acknowledged && n.astronautId === a.id);
+                const self = a.id === astronaut.id;
+                const status = findingsOf(a.id)[0]?.status ?? "Nominal";
+                const ring = !a.share && !self ? "locked" : status === "Alert" ? "alert" : status === "Review" ? "review" : "ok";
+                const days = new Set(state.completions.filter((x) => x.astronautId === a.id && x.scenario === state.scenario && x.kind === "session" && x.day <= state.day).map((x) => x.day));
+                const streak = sessionStreak(days, state.day);
+                return (
+                  <li key={a.id}>
+                    <button className={`who-btn crew-card${a.id === selected.id ? " selected" : ""}`} aria-pressed={a.id === selected.id} onClick={() => select(a.id)}>
+                      <span className="cc-badge">{a.designation}</span>
+                      <span className={`cc-portrait ring-${ring}`} aria-hidden="true">{a.initials}</span>
+                      <span className="cc-name">{a.name}</span>
+                      <small className="cc-role">{a.role}{self && <em className="you"> · you</em>}</small>
+                      <span className="cc-status"><SharedStatus a={a} findings={findingsOf(a.id)} /></span>
+                      <span className="cc-rows">
+                        <span className="cc-row">
+                          <span className="cc-k">Check-in</span>
+                          <span className="cc-v">
+                            {c.last ? when(c.last, state.day) : "None yet"}
+                            <small className="block">
+                              {concern ? <span className="tone warn">{CHECKIN_STATUS[c.last?.status ?? "talk"]}</span>
+                                : asked ? "Requested by you"
+                                : c.due === "done" ? <span className="muted">{CHECKIN_STATUS[c.last!.status]}</span>
+                                : <span className={c.due === "overdue" ? "tone alert" : "tone warn"}>{c.due === "overdue" ? "Overdue" : "Due today"}</span>}
+                            </small>
+                          </span>
+                        </span>
+                        {(a.share || self) && (
+                          <span className="cc-row">
+                            <span className="cc-k">Exercise streak</span>
+                            <span className="cc-v cc-streak">
+                              <img src={`${import.meta.env.BASE_URL}media/streak/flame-${days.has(state.day) ? "lit" : "unlit"}.svg`} alt="" width={14} height={18} />
+                              {streak} {streak === 1 ? "day" : "days"}
+                            </span>
+                          </span>
+                        )}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
           </section>
           <Activity />
         </div>

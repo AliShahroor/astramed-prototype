@@ -131,7 +131,7 @@ test("cross-profile: Ali asks Mohammad to check in, signs out; Mohammad answers"
   await expect(page.locator(".crew-detail .sent")).toContainText("Waiting for Mohammad");
   await page.locator(".crew-detail .sent").getByRole("button", { name: "Withdraw" }).click();
   await page.getByRole("button", { name: /Ask Mohammad (to check in|for an update)/ }).click();
-  await expect(page.locator(".roster tr", { hasText: "Mohammad Al-Ani" })).toContainText("Requested by you");
+  await expect(page.locator(".crew-card", { hasText: "Mohammad Al-Ani" })).toContainText("Requested by you");
   await page.getByRole("button", { name: /Profile:/ }).click();
   await page.getByRole("menuitem", { name: "Sign out of demo session" }).click();
   await page.getByRole("button", { name: "Enter Mission System" }).click();
