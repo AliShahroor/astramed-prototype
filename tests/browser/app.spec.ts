@@ -57,7 +57,7 @@ test("findings, health card calculation, evidence and scenarios", async ({ page 
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("./#/health");
   await expect(page.getByRole("heading", { name: "Slower reaction-time responses observed" })).toBeVisible();
-  await page.getByRole("button", { name: "Open health card" }).click();
+  await page.getByRole("button", { name: "Why was this flagged?" }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toContainText("+23.2% vs baseline");
   await dialog.getByText("Show calculation").click();
@@ -71,7 +71,7 @@ test("findings, health card calculation, evidence and scenarios", async ({ page 
   await expect(page.getByRole("heading", { name: "No active findings" })).toBeVisible();
   await scenario(page, "environment");
   await expect(page.getByRole("heading", { name: "Cabin CO₂ exceeds the reference" })).toBeVisible();
-  await page.getByRole("button", { name: "Open health card" }).click();
+  await page.getByRole("button", { name: "Why was this flagged?" }).click();
   await page.getByRole("dialog").getByText("Show calculation").click();
   await expect(page.getByRole("dialog")).toContainText("4.1 − 3 = 1.1 mmHg");
   expect(errors).toEqual([]);
@@ -98,41 +98,92 @@ test("logging, persistence, profile switching, environment theme, hazards and da
   await expect(panel.getByLabel("Mission day", { exact: true })).toHaveValue("93");
 });
 
-test("crew: summary, detail charts, privacy, request, check-in with note, history, feed", async ({ page }) => {
+test("crew: queue, detail, privacy, check-in with a concern, crewmate acknowledges", async ({ page }) => {
   await page.goto("./#/crew");
-  await expect(page.getByRole("region", { name: "Crew summary" })).toContainText("Check-ins due today");
-  await expect(page.locator(".roster")).toContainText("Due today");
-  await expect(page.locator(".crew-detail")).toContainText("Shared wellness trends");
-  await expect(page.locator(".spark")).toHaveCount(3);
+  const queue = page.locator(".queue");
+  await expect(queue).toContainText("Check-in requested by the monitoring policy");
+  await expect(page.locator(".crew-detail .spark")).toHaveCount(3);
+  await expect(page.locator(".crew-detail .strip .cell")).toHaveCount(14);
   await page.locator(".who-btn", { hasText: "Nada Aboubaker" }).click();
-  await expect(page.locator(".crew-detail")).toContainText("limited sharing");
-  await expect(page.locator(".spark")).toHaveCount(0);
-  await expect(page.locator(".checkin-history")).toContainText("Today");
-  await page.locator(".who-btn", { hasText: "Mohammad Al-Ani" }).click();
-  await page.getByRole("button", { name: "Request check-in" }).click();
-  await expect(page.locator("table.notes")).toContainText("Check-in requested by Ali Shahroor");
-  await page.locator(".who-btn", { hasText: "Ali Shahroor" }).click();
-  await page.getByText("Requests a conversation", { exact: true }).last().click();
-  await page.getByLabel("Note for the crew (optional)").fill("Short sleep this week");
-  await page.getByRole("button", { name: "Submit check-in" }).click();
-  await expect(page.locator(".checkin-history li").first()).toContainText("Short sleep this week");
-  await expect(page.locator(".roster tr", { hasText: "Ali Shahroor" })).not.toContainText("Due today");
-  await page.getByRole("button", { name: "Acknowledge", exact: true }).first().click();
-  await page.getByRole("button", { name: "All notifications" }).click();
-  await expect(page.locator("table.notes")).toContainText("Acknowledged");
-  await page.getByRole("button", { name: "Activity" }).click();
-  await expect(page.locator(".log")).toContainText("Ali checked in: Requests a conversation");
-  await page.reload();
-  await expect(page.getByRole("button", { name: "Activity" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".crew-detail")).toContainText("shares status and check-ins only");
+  await expect(page.locator(".crew-detail .spark")).toHaveCount(0);
+  await queue.getByRole("button", { name: "Check in", exact: true }).click();
   await expect(page.locator(".crew-detail h2")).toContainText("Ali Shahroor");
-  await expect(page.locator(".timeline-grid")).toBeVisible();
+  await page.locator(".crew-detail label.choice", { hasText: "I’d like to talk" }).click();
+  await page.getByLabel("Note (optional)").fill("Short sleep this week");
+  await page.locator(".checkin-form").getByRole("button", { name: "Check in", exact: true }).click();
+  await expect(page.locator(".checkin-done")).toContainText("Would like to talk");
+  await expect(page.locator(".checkin-done")).toContainText("Short sleep this week");
+  await expect(queue).not.toContainText("monitoring policy");
+  await expect(page.locator(".log")).toContainText("Ali checked in: Would like to talk");
+  await page.getByRole("button", { name: /Profile:/ }).click();
+  await page.getByRole("menuitemradio", { name: /Mohammad Al-Ani/ }).click();
+  await expect(queue).toContainText("Ali would like to talk");
+  await queue.locator("li", { hasText: "would like to talk" }).getByRole("button", { name: "Acknowledge" }).click();
+  await expect(queue).not.toContainText("would like to talk");
+  await expect(page.locator(".log")).toContainText("Ali’s request was acknowledged");
+});
+
+test("cross-profile: Ali asks Mohammad to check in, signs out; Mohammad answers", async ({ page }) => {
+  await page.goto("./#/crew");
+  await page.locator(".who-btn", { hasText: "Mohammad Al-Ani" }).click();
+  await page.getByRole("button", { name: /Ask Mohammad (to check in|for an update)/ }).click();
+  await expect(page.locator(".crew-detail .sent")).toContainText("Waiting for Mohammad");
+  await page.locator(".crew-detail .sent").getByRole("button", { name: "Withdraw" }).click();
+  await page.getByRole("button", { name: /Ask Mohammad (to check in|for an update)/ }).click();
+  await expect(page.locator(".crew-card", { hasText: "Mohammad Al-Ani" })).toContainText("Requested by you");
+  await page.getByRole("button", { name: /Profile:/ }).click();
+  await page.getByRole("menuitem", { name: "Sign out of demo session" }).click();
+  await page.getByRole("button", { name: "Enter Mission System" }).click();
+  await page.getByRole("button", { name: /Enter as Mohammad Al-Ani/ }).click();
+  await page.getByRole("button", { name: "Open Workspace" }).click();
+  await nav(page, "Crew").click();
+  await expect(page.locator(".queue")).toContainText("Check-in requested by Ali");
+  await page.locator(".queue").getByRole("button", { name: "Check in", exact: true }).click();
+  await page.locator(".checkin-form").getByRole("button", { name: "Check in", exact: true }).click();
+  await expect(page.locator(".queue")).not.toContainText("Check-in requested by Ali");
+  await page.getByRole("button", { name: /Profile:/ }).click();
+  await page.getByRole("menuitemradio", { name: /Ali Shahroor/ }).click();
+  await expect(page.locator(".log")).toContainText("Mohammad answered Ali’s request");
+});
+
+test("crew report to ground respects sharing and is logged", async ({ page }) => {
+  await page.goto("./#/crew");
+  await page.getByRole("button", { name: "Report to ground" }).click();
+  const d = page.getByRole("dialog");
+  const report = d.getByLabel("Report preview");
+  await expect(report).toContainText("Ali Shahroor, Mission specialist");
+  await expect(report).toContainText("Findings: not shared by this crew member");
+  await expect(report).toContainText("NASA limit 3 mmHg");
+  await d.getByLabel("Add a note (optional)").fill("Ali will retest after rest");
+  await expect(report).toContainText("Note: Ali will retest after rest");
+  await d.getByRole("button", { name: "Queue report" }).click();
+  await expect(d).toContainText("Queued at");
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".log")).toContainText("Ali sent a crew report to ground");
+});
+
+test("daily briefing: findings, changes, crew, tasks", async ({ page }) => {
+  await page.goto("./#/health");
+  await expect(page.locator(".who-name")).toHaveText("Ali Shahroor");
+  await page.getByRole("button", { name: "Review today’s briefing" }).click();
+  const d = page.getByRole("dialog");
+  await expect(d).toContainText("Slower reaction-time responses observed");
+  await d.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(d).toContainText("Since day 93");
+  await d.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(d).toContainText("Your check-in for today");
+  await d.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(d).toContainText("Repeat the reaction-time assessment");
+  await d.getByRole("button", { name: "Start first task" }).click();
+  await expect(title(page, "Crew Health & Operations")).toBeVisible();
 });
 
 test("physical training: video, checklist and session are tracked separately", async ({ page }) => {
   await page.goto("./#/countermeasures/physical");
-  await expect(page.getByRole("heading", { name: "Resistance exercise", level: 2 })).toBeVisible();
-  await expect(page.locator(".video-credit")).toContainText("NASA Johnson Space Center");
-  await page.locator(".training-item", { hasText: "Mobility check" }).click();
+  await expect(page.getByRole("heading", { name: "Treadmill aerobic exercise", level: 2 })).toBeVisible();
+  await expect(page.locator(".video-credit")).toContainText("Canadian Space Agency");
+  await page.locator(".training-item", { hasText: "Mobility" }).click();
   for (const box of await page.locator(".check-row input").all()) await box.check();
   await expect(page.getByText("Checklist complete for today")).toBeVisible();
   await page.getByLabel("Duration (min)").fill("0");
@@ -145,6 +196,21 @@ test("physical training: video, checklist and session are tracked separately", a
   await page.getByRole("link", { name: "History" }).click();
   await expect(page.locator(".stat-row")).toContainText("Sessions recorded1");
   await expect(page.locator(".stat-row")).toContainText("Exercise minutes12");
+});
+
+test("exercise page: live demo metrics, session bar, muscles, save and best record", async ({ page }) => {
+  await page.goto("./#/countermeasures/physical");
+  await page.locator(".training-item", { hasText: "Squat" }).click();
+  await expect(page.locator(".xs-body")).toContainText("Quadriceps");
+  await page.getByRole("button", { name: "60×" }).click();
+  await expect(page.locator(".xs-metrics")).toContainText(/Sets done\s*[1-9]/, { timeout: 15000 });
+  await expect(page.getByRole("progressbar")).not.toHaveAttribute("aria-valuenow", "0");
+  await page.getByRole("button", { name: "Save session" }).click();
+  await expect(page.locator(".streak")).toContainText("1 day");
+  await expect(page.locator(".streak")).toHaveClass(/lit/);
+  await expect(page.locator(".best")).not.toContainText("–Estimated max");
+  await expect(page.getByText("Demonstration checklist")).toHaveCount(0);
+  await expect(page.locator(".training-history")).toContainText("sets");
 });
 
 test("real assessment: early trial excluded, five valid trials saved to health", async ({ page }) => {
@@ -247,17 +313,14 @@ test("offline: workspace, evidence and assessment work; uncached video shows una
   await page.reload();
   await expect(title(page, "Personal Health Overview")).toBeVisible();
   await scenario(page, "environment");
-  await page.getByRole("button", { name: "Open health card" }).click();
+  await page.getByRole("button", { name: "Why was this flagged?" }).click();
   await page.getByRole("dialog").getByRole("button", { name: /OCHMO/ }).click();
   await expect(page.getByRole("dialog")).toContainText("at most 3 mmHg");
   await page.getByRole("button", { name: "Close dialog" }).click();
   await nav(page, "Countermeasures").click();
-  await expect(page.getByText("Video unavailable")).toBeVisible();
-  await expect(page.getByText("not stored for offline use")).toBeVisible();
-  await page.locator(".training-item", { hasText: "Cycle ergometer" }).click();
-  await expect(page.locator(".video-credit")).toContainText("available offline");
-  await page.getByRole("button", { name: /Play video/ }).click();
-  await expect.poll(() => page.evaluate(() => document.querySelector("video")?.readyState ?? 0), { timeout: 10000 }).toBeGreaterThanOrEqual(2);
+  await page.locator(".training-item", { hasText: "Cycle" }).click();
+  await expect(page.locator(".video-credit")).toContainText("Canadian Space Agency");
+  await expect.poll(() => page.evaluate(() => (document.querySelector(".xs-clip video") as HTMLVideoElement | null)?.readyState ?? 0), { timeout: 10000 }).toBeGreaterThanOrEqual(2);
   await page.getByRole("link", { name: "Cognitive assessment" }).click();
   await page.getByRole("button", { name: "Reaction time only" }).click();
   await page.getByRole("button", { name: "Start practice" }).click();
@@ -284,6 +347,6 @@ test("accessibility of entry screens, pages and dialogs", async ({ page }) => {
     await check();
   }
   await page.goto("./#/health");
-  await page.getByRole("button", { name: "Open health card" }).click();
+  await page.getByRole("button", { name: "Why was this flagged?" }).click();
   await check();
 });

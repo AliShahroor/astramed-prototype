@@ -30,7 +30,8 @@ export function Workspace({ mission, route, go }: { mission: ReturnType<typeof u
   const astronaut = astronauts.find((a) => a.id === state.astronautId)!;
   const environment = environments.find((e) => e.id === state.environmentId)!;
   const findings = useMemo(() => evaluateAll(astronaut, rows, state.scenario, state.day, range), [astronaut, rows, state.scenario, state.day, range]);
-  const pending = state.notifications.filter((n) => n.scenario === state.scenario && n.day <= state.day && !n.acknowledged);
+  // Badge counts what needs this crew member’s attention, not requests they sent themselves.
+  const pending = state.notifications.filter((n) => n.scenario === state.scenario && n.day <= state.day && !n.acknowledged && !(n.kind === "request" && n.requestedBy === state.astronautId));
 
   useEffect(() => {
     if (!toast) return;

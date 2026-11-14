@@ -15,8 +15,8 @@ export default defineConfig({
       closeBundle() {
         const assets = [
           ...readdirSync("dist/assets").map((f) => `./assets/${f}`),
-          // Bundled NASA training video and captions, so one demonstration plays without a connection.
-          ...readdirSync("dist/media").map((f) => `./media/${f}`),
+          // Bundled NASA training video, captions, exercise clips and thumbnails, so they play without a connection.
+          ...readdirSync("dist/media", { recursive: true, encoding: "utf8" }).filter((f) => /\.(mp4|vtt|svg)$/.test(f)).map((f) => `./media/${f.replaceAll("\\", "/")}`),
         ];
         writeFileSync(
           "dist/sw.js",

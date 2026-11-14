@@ -8,4 +8,6 @@ All seeded crew names, mission histories and measurements are fictional. The vis
 
 No generated image, video, speech recording, NASA logo, NASA mark, stock astronaut photo or third-party character asset was created or used. Lucide provides UI icons under its package license; Recharts, React, Vite and other dependencies retain their respective licenses in the dependency packages. A system sans-serif font is used. The optional browser voice synthesizes already-displayed text only.
 
+The exercise page (tabs, live demo metrics, session bar, muscle figure, best records) was built with Anthropic Claude assistance and checked with the same unit and browser tests. Its looping clips are short, unmodified cuts (resized only) from official agency footage: Canadian Space Agency “Physical activity in space” (treadmill, cycle), NASA “Train Like an Astronaut – ARED” (squat) and NASA “How Do Astronauts Exercise in Space?” (ARED, bench press, flywheel). The muscle figure is an original drawing.
+
 Before a public competition submission, the team must verify the event’s current AI/SI attribution rules and add any required form disclosures, credits, metadata or visible labels to the final submitted video or slides. This document is an accurate development disclosure, not a claim that competition compliance has been formally reviewed.

@@ -1,5 +1,11 @@
 # Validation record · 14 November 2026
 
+## Daily briefing and attention queue pass
+
+Today’s briefing (deterministic, read-aloud): findings split into review vs awaiting repeat, changes since the previous mission day, crew check-ins and requests, and next tasks linking to Crew and Countermeasures. My Health now leads with who the astronaut is, then the explainable health card (observed → baseline → change → period), then all measurements. Crew leads with a "Needs attention" queue for the signed-in profile; the crew-wide grid was replaced by a 14-day strip for the selected crew member; a check-in answers open check-in requests (crewmate or monitoring policy). Requests persist across sign-out and profile switches.
+
+Checks run: typecheck and lint passed; 18/18 unit tests; build passed; Playwright 15/15 locally, including cross-profile requests and the briefing.
+
 ## Crew and check-in pass
 
 Crew renamed to Ali Shahroor (mission specialist), Mohammad Al-Ani (commander) and Nada Aboubaker (flight engineer, limited sharing); crew reduced to three. Accent side-lines removed from navigation, roster, evidence list and notices. Filters, time range, selected crew member and feed tab are remembered across reloads (`astramed-ui-v1`), cleared on restart. Check-ins: one week of synthetic routine check-ins (marked "sim"), due/overdue state, check-in form with status and note, history per crew member, crew requests answered automatically by a check-in, "Requests medical support" raises a crew notification. Notifications and activity combined with Open / All / Activity views and Acknowledge all. Pages fade in on navigation (disabled for reduced motion). My Health and Countermeasures were not changed in this pass.

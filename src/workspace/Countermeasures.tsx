@@ -1,10 +1,13 @@
 import { useState } from "react";
-import { ArrowRight, Check, CircleCheck, Eye, Timer } from "lucide-react";
+import { ArrowRight, Check, Timer } from "lucide-react";
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { activities, astronauts } from "../data/catalog";
 import { evidenceFor } from "../data/evidence";
 import { Assessment } from "../components/Assessment";
 import { VideoPlayer } from "../components/VideoPlayer";
+import { BestRecord, ExerciseStage, Streak } from "../components/ExerciseStage";
+import type { StageSave } from "../components/ExerciseStage";
+import { brokenRecords, formatClock, personalBests, sessionStreak } from "../engine/session";
 import { CognitiveTask } from "../components/CognitiveTask";
 import { BASELINE_SESSIONS, ORDER, SCORED_TESTS, TESTS, personalBaseline } from "../engine/battery";
 import { dayTimestamp, evaluate, selectSeries } from "../engine/monitoring";
@@ -34,51 +37,33 @@ export function Countermeasures() {
   );
 }
 
+const SHORT: Record<string, string> = { treadmill: "Treadmill", cycle: "Cycle", flywheel: "Flywheel", mobility: "Mobility", recovery: "Rest" };
+
 function Physical() {
   const { state, astronaut } = useWs();
-  const [selectedId, setSelectedId] = useState(activities[0].id);
+  const [selectedId, setSelectedId] = useState("treadmill");
   const selected = activities.find((a) => a.id === selectedId)!;
   const mine = (id: string) => ({
     session: state.completions.some((c) => c.activityId === id && c.astronautId === astronaut.id && c.day === state.day && c.scenario === state.scenario && isSession(c)),
     checklist: state.completions.some((c) => c.activityId === id && c.astronautId === astronaut.id && c.day === state.day && c.scenario === state.scenario && isChecklist(c)),
     watched: state.videoViews.some((v) => v.activityId === id && v.astronautId === astronaut.id && v.scenario === state.scenario),
   });
-  const groups = [
-    { label: "Exercise hardware", ids: ["resistance", "treadmill", "cycle"] },
-    { label: "Mobility and recovery", ids: ["mobility", "recovery"] },
-  ];
+  const order = ["treadmill", "cycle", "squat", "deadlift", "heelraise", "bench", "flywheel", "mobility", "recovery"];
   return (
     <div className="training">
-      <nav className="training-list" aria-label="Training library">
-        {groups.map((g) => (
-          <div key={g.label}>
-            <h2 className="list-label">{g.label}</h2>
-            <ul>
-              {g.ids.map((id) => {
-                const a = activities.find((x) => x.id === id)!;
-                const s = mine(id);
-                return (
-                  <li key={id}>
-                    <button className="training-item" aria-current={id === selectedId ? "true" : undefined} onClick={() => setSelectedId(id)}>
-                      <span className="grow">
-                        <span className="training-name">{a.title}</span>
-                        <small>{a.category}{a.video ? " · video" : ""}</small>
-                      </span>
-                      <span className="marks" aria-label={`${s.session ? "Session recorded today. " : ""}${s.checklist ? "Checklist done today. " : ""}${s.watched ? "Video watched." : ""}`}>
-                        {s.watched && <Eye size={14} aria-hidden="true" />}
-                        {s.checklist && <CircleCheck size={14} aria-hidden="true" />}
-                        {s.session && <Timer size={14} aria-hidden="true" className="ok-icon" />}
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
-        <p className="muted small list-key"><Eye size={13} aria-hidden="true" /> watched · <CircleCheck size={13} aria-hidden="true" /> checklist · <Timer size={13} aria-hidden="true" /> session today</p>
+      <nav className="ex-tabs" aria-label="Exercises">
+        {order.map((id) => {
+          const a = activities.find((x) => x.id === id)!;
+          const s = mine(id);
+          return (
+            <button key={id} className="training-item" aria-current={id === selectedId ? "true" : undefined} onClick={() => setSelectedId(id)}>
+              {SHORT[id] ?? a.title}
+              {s.session && <Timer size={13} aria-label="Session recorded today" className="ok-icon" />}
+            </button>
+          );
+        })}
       </nav>
-      <TrainingDetail key={selected.id} a={selected} />
+      <TrainingDetail key={`${selected.id}-${astronaut.id}`} a={selected} />
     </div>
   );
 }
@@ -118,6 +103,16 @@ function TrainingDetail({ a }: { a: Activity }) {
     setState((s) => ({ ...s, videoViews: [...s.videoViews, { astronautId: astronaut.id, activityId: a.id, scenario: s.scenario, day: s.day, timestamp: dayTimestamp(s.day, 16) }] }));
     notify("Video marked as watched. Watching a video does not count as a session.");
   };
+  const sessions = history.filter(isSession);
+  const [broken, setBroken] = useState<string[]>([]);
+  const myDays = new Set(state.completions.filter((c) => c.astronautId === astronaut.id && c.scenario === state.scenario && isSession(c) && c.day <= state.day).map((c) => c.day));
+  const saveStage = ({ seconds, metrics }: StageSave) => {
+    const entry: Completion = { astronautId: astronaut.id, activityId: a.id, day: state.day, scenario: state.scenario, timestamp: dayTimestamp(state.day, 18), kind: "session", minutes: Math.max(1, Math.round(seconds / 60)), seconds, metrics };
+    const beaten = brokenRecords(personalBests(sessions), personalBests([...sessions, entry]), sessions.length > 0, a.kind!);
+    setBroken(beaten);
+    setState((s) => ({ ...s, completions: [...s.completions, entry] }));
+    notify(beaten.length ? `Session saved. New best: ${beaten.join(", ")}.` : `${formatClock(seconds)} ${a.title.toLowerCase()} session saved for day ${state.day}.`);
+  };
 
   return (
     <article className="training-detail" aria-labelledby="training-h">
@@ -126,8 +121,19 @@ function TrainingDetail({ a }: { a: Activity }) {
         <h2 id="training-h" className="finding-title">{a.title}</h2>
         <p className="muted">{a.purpose}</p>
       </header>
-      {a.video ? <VideoPlayer video={a.video} onWatched={markWatched} /> : <p className="no-video">No NASA demonstration video is linked for this routine.</p>}
-      <div className="training-cols">
+      {a.kind ? (
+        <ExerciseStage a={a} restHr={astronaut.baseline.heart.value} onSave={saveStage} />
+      ) : a.video ? <VideoPlayer video={a.video} onWatched={markWatched} /> : <p className="no-video">No NASA demonstration video is linked for this routine.</p>}
+      {a.kind ? (
+        <div className="training-cols">
+          <div>
+            <BestRecord kind={a.kind} bests={personalBests(sessions)} broken={broken} />
+            <h3 className="h3 spaced">Instructions</h3>
+            <ol className="steps">{(a.instructions ?? []).map((s) => <li key={s}>{s}</li>)}</ol>
+          </div>
+          <Streak streak={sessionStreak(myDays, state.day)} doneToday={myDays.has(state.day)} />
+        </div>
+      ) : <div className="training-cols">
         <div>
           <dl className="qa compact">
             <div><dt>Equipment</dt><dd>{a.equipment}</dd></div>
@@ -158,13 +164,13 @@ function TrainingDetail({ a }: { a: Activity }) {
             <button className="btn btn-primary" type="submit">Record session</button>
           </form>
         </div>
-      </div>
+      </div>}
       <section className="training-history" aria-labelledby="hist-h">
         <h3 id="hist-h" className="h3">History for {a.title.toLowerCase()}</h3>
         {history.length + views.length === 0 ? <p className="empty">Nothing recorded for this activity in the current scenario.</p> : (
           <ul className="record-list">
             {[...history].reverse().map((c, i) => (
-              <li key={i}><span>{isSession(c) ? `Session · ${c.minutes} min${c.note ? ` · ${c.note}` : ""}` : "Demonstration checklist completed"}</span><span className="muted">Day {c.day}</span></li>
+              <li key={i}><span>{isSession(c) ? `Session · ${c.seconds ? formatClock(c.seconds) : `${c.minutes} min`}${c.metrics?.sets ? ` · ${c.metrics.sets} sets` : ""}${c.metrics?.avgHr ? ` · avg ${c.metrics.avgHr} bpm (simulated)` : ""}${c.note ? ` · ${c.note}` : ""}` : "Demonstration checklist completed"}</span><span className="muted">Day {c.day}</span></li>
             ))}
             {views.map((v, i) => <li key={`v${i}`}><span>Video watched</span><span className="muted">Day {v.day}</span></li>)}
           </ul>
