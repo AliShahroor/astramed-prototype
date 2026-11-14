@@ -24,21 +24,21 @@ export const environments: Environment[] = [
     id: "mars",
     name: "Mars transit",
     gravity: "Microgravity",
-    delay: "14 min one-way (illustrative)",
+    delay: "3–22 min one-way, varies with Earth–Mars distance",
     priority: "Autonomous checks and local evidence",
   },
   {
     id: "orbit",
     name: "Orbital station",
     gravity: "Microgravity",
-    delay: "Near real-time (illustrative)",
+    delay: "About 1 s or less via relay satellites",
     priority: "Exercise and cabin monitoring",
   },
   {
     id: "moon",
     name: "Lunar surface",
     gravity: "0.16 g",
-    delay: "1.3 sec one-way (illustrative)",
+    delay: "About 1.3 s one-way",
     priority: "Surface operations and mobility",
   },
   {
@@ -201,6 +201,7 @@ export const astronauts: Astronaut[] = [
     name: "Alex Morgan",
     role: "Mission specialist",
     initials: "AM",
+    designation: "CREW 03 · MS",
     history:
       "Stable simulated preflight measures; recent sleep restriction in scenario B.",
     share: true,
@@ -211,6 +212,7 @@ export const astronauts: Astronaut[] = [
     name: "Maya Chen",
     role: "Commander",
     initials: "MC",
+    designation: "CREW 01 · CDR",
     history:
       "Consistent simulated sleep and cognitive measures; higher preflight resting heart rate.",
     share: true,
@@ -221,6 +223,7 @@ export const astronauts: Astronaut[] = [
     name: "Leo Okafor",
     role: "Flight engineer",
     initials: "LO",
+    designation: "CREW 02 · FE",
     history:
       "Reduced simulated activity during maintenance work; no clinical condition assigned.",
     share: false,
@@ -236,6 +239,7 @@ export const astronauts: Astronaut[] = [
     name: "Samira Noor",
     role: "Crew medical officer",
     initials: "SN",
+    designation: "CREW 04 · CMO",
     history: "Mild simulated sleep variability; stable cognitive responses.",
     share: true,
     baseline: makeBaseline({ heart: 64, reaction: 280, sleep: 7.8 }),

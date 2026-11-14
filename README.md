@@ -28,12 +28,15 @@ Open http://127.0.0.1:4173, allow its service worker to finish installing, and l
 
 ## The demonstration
 
+The app opens on a welcome screen. **Enter Mission Demo** leads to demo access (choose one of four fictional crew profiles, or the guest demo), then a short mission briefing that can be skipped on later visits, then My Health. No password or account is involved; every screen is directly linkable (`#/health`, `#/crew`, `#/countermeasures/cognitive`), and a direct link opens the workspace as the guest profile. The profile menu switches astronaut, reopens the briefing, opens Demo & preferences, returns to the welcome screen or resets the demo.
+
 Start with Alex Morgan, Mars transit, mission day 94, scenario B. The current synthetic reaction-time latency of 351 ms is compared with a seeded 285 ms baseline, yielding a calculated +23.2% change. Inspect the Health Card for the exact rule, persistence, sleep context, limitations and local NASA evidence record. Run the short reaction-response assessment in Countermeasures → Cognitive, save the result, and return to My Health to inspect the updated finding. Crew shows limited statuses and deduplicated local check-in notifications. Scenario C changes the underlying cabin one-hour CO₂ average to 4.1 mmHg; the app calculates its 1.1 mmHg exceedance of the pinned 3 mmHg reference.
 
-The optional voice setting reads the same deterministic finding. Reset and JSON export are under Demo & preferences.
+The optional voice setting reads the same deterministic finding. Reset and JSON export are under Demo & preferences in the profile menu.
 
 ## Implemented features
 
+- Entry flow: welcome → demo access → mission briefing (skippable per profile) → My Health.
 - Three responsive sections: My Health, Crew and Countermeasures.
 - Four fictional astronauts, 94 days of deterministic history and three scenarios.
 - Global astronaut, day and environment selectors; four time windows and five hazard filters.
@@ -51,7 +54,7 @@ NASA science informs measurement selection, hazard context and the two pinned re
 
 Sources are recorded in [the evidence mapping](docs/scientific-sources/evidence-mapping.md). Core references include NASA Spaceflight Standard Measures, the HRP ISS psychomotor-vigilance task, OCHMO-TB-004 (citing NASA-STD-3001 Vol 2 Rev D V2 6004), and NASA-STD-3001 Vol 1 Rev C V1 4030. The app pins these references; it does not claim certification against the latest standard. The older Rev D PDF URL returned 404, so its accessible official technical brief is the evidence link.
 
-The sleep, reaction-time and heart-rate percentage rules are **unvalidated Code Blue demonstration rules**, not NASA clinical thresholds. Environment changes affect displayed operational context, not physiological limits. “Nominal” means no implemented rule triggered, never medical clearance.
+The sleep, reaction-time and heart-rate percentage rules are **unvalidated Code Blue demonstration rules**, not NASA clinical thresholds. Environment changes affect displayed operational context, not physiological limits. “Nominal” (shown as “No flag”) means no implemented rule triggered, never medical clearance.
 
 ## Stack and architecture
 

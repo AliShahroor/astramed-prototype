@@ -1,5 +1,22 @@
 # Validation record · 14 November 2026
 
+## Redesign and quality pass (local, not yet published)
+
+Changes: new entry flow (welcome, demo access, mission briefing) with hash routing and direct links; App.tsx split into screens and workspace modules; a new restrained visual system (top navigation, profile menu, simulation bar, fewer boxes, consistent 26/18/16/15 px type scale); My Health reorganised around one current-status line, the primary finding and an indicator list beside the chart; Crew rebuilt as an operational roster with a separate cabin row, notification timeline and check-in choices; Countermeasures tabs are linkable routes and include a voluntary crew participation view.
+
+QC fixes: shared cabin CO₂ notifications are no longer attributed to an astronaut; notification timestamps use the simulated mission clock instead of wall time; responses under 100 ms are counted as anticipatory instead of missed; voice after saving an assessment reads the recalculated finding instead of the stale one; sleep and heart-rate findings get indicator-specific explanations and next checks instead of a generic sentence; illustrative communication delays replaced with factual ranges; the radiation chart baseline is labelled as mission-start dose rather than a personal baseline; dialogs are centred and return focus to their opener; a narrow-width roster overflow was fixed.
+
+| Check | Result |
+| --- | --- |
+| `npx tsc --noEmit` | Passed |
+| `npm run lint` | Passed |
+| `npm test` | 18 / 18 passed |
+| `npm run build` | Passed |
+| Playwright production suite (rewritten for the new flow, 10 tests incl. axe WCAG 2.1 AA on entry screens, all pages and the health card, offline reload, real timed assessment, 1440/1280/390 px overflow) | 10 / 10 passed against a local `vite preview` |
+
+The live GitHub Pages site still runs the previous release until these changes are pushed.
+
+
 ## Executed local checks
 
 | Check | Observed result |

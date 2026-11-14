@@ -217,6 +217,19 @@ export function evaluate(
             : "Resting heart rate above personal baseline";
       if (persistence < 3) title += " · repeat to confirm";
     }
+    if (indicator === "sleep") {
+      explanation =
+        "NASA Standard Measures include sleep reports because sleep can change over long missions. Duration alone says nothing about sleep quality, timing or individual need, and the 15% threshold is a Code Blue prototype choice.";
+      next =
+        "Review recent work-rest schedule and interruptions, and consider a reaction-time reassessment. Raise persistent sleep concerns at a crew medical check-in.";
+    }
+    if (indicator === "heart") {
+      evidenceIds = ["measures", "hazards"];
+      explanation =
+        "Cardiovascular adaptation is part of NASA’s gravity-fields hazard. Resting heart rate also varies with exercise timing, stress, hydration and sleep, none of which is separated here; a deviation from personal baseline is a prompt to recheck, not a diagnosis.";
+      next =
+        "Repeat the resting measurement under comparable conditions and review recent activity and sleep. Discuss a persistent change with the crew medical officer.";
+    }
     if (indicator === "reaction") {
       evidenceIds = ["measures", "pvt"];
       explanation =
