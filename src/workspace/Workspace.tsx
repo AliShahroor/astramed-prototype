@@ -128,8 +128,7 @@ export function Workspace({ mission, route, go }: { mission: ReturnType<typeof u
             {route.page === "countermeasures" && <Countermeasures />}
           </main>
           <footer className="appfoot">
-            <span>ASTRAMED prototype · Team Code Blue · synthetic crew and measurements</span>
-            <span>Decision support only. Not a medical device.</span>
+            <span>NASA Space Apps Challenge 2026</span>
           </footer>
         </div>
         <Modals modal={modal} close={() => setModal(null)} />

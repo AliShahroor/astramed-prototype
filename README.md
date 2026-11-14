@@ -6,7 +6,15 @@
 
 ASTRAMED is Team Code Blue’s local-first astronaut health-monitoring and decision-support prototype, developed for the brief “Create Health Monitoring Software for Astronauts on Space Missions.” It uses fictional adults and reproducible synthetic measurements. It does not diagnose disease, prescribe treatment, determine fitness for duty, or replace flight surgeons.
 
-![ASTRAMED personal health overview](docs/validation/overview-1280.png)
+## Screens
+
+| | |
+|---|---|
+| **Welcome**<br>![Welcome screen](docs/screenshots/welcome.png) | **My Health**<br>Personal readings against your own baseline, with an explainable health card for anything flagged.<br>![My Health](docs/screenshots/my-health.png) |
+| **Crew**<br>Player cards with status, check-in and exercise streak. Crewmates see status, never measurements.<br>![Crew](docs/screenshots/crew.png) | **Exercise**<br>One tab per exercise: live demo metrics, a looping clip with a session bar, the muscles worked, best record and streak.<br>![Exercise](docs/screenshots/exercise.png) |
+| **Cognitive**<br>Short tests modelled on NASA's WinSCAT battery, each compared with your own first sessions.<br>![Cognitive](docs/screenshots/cognitive.png) | |
+
+Screens show synthetic demo data (scenario B, mission day 94).
 
 ## Run locally
 
@@ -40,9 +48,9 @@ The optional voice setting reads the same deterministic finding. Reset and JSON 
 
 - Entry flow: welcome → demo access → mission briefing (skippable per profile) → My Health.
 - Three responsive sections: Personal Health Overview, Crew Health & Operations, and Exercise & Cognitive Assessments.
-- Crew operations dashboard: summary, roster, crew-member detail with shared 14-day wellness trends (only for profiles that share), attention timeline recalculated per day, notification table with acknowledge/dismiss/review, check-in requests and an activity log.
+- Crew operations dashboard: attention queue, player cards for each crew member (they scale to any crew size and put anyone needing attention first), crew-member detail with shared 14-day wellness trends (only for profiles that share), attention timeline recalculated per day, notification table with acknowledge/dismiss/review, check-in requests and an activity log.
 - Cognitive battery of five tasks modelled on NASA’s WinSCAT (Code Substitution, Running Memory CPT, Mathematical Processing, Delayed Matching to Sample, Code Substitution Delayed) plus simple reaction time, each with practice, keyboard input, accuracy, median response time, throughput and a personal baseline built from the first three sessions.
-- Physical training library with attributed NASA videos (one bundled so it plays offline) (see the evidence mapping), demonstration checklists and a separate session log; watching, checklist completion and recorded sessions are tracked separately.
+- Exercise page with one tab per exercise (treadmill, cycle, squat, deadlift, heel raise, bench press, flywheel, mobility, rest): live simulated metrics, a looping clip from Canadian Space Agency and NASA footage (stored for offline use), a session bar sized from ISS practice (about 30 min aerobic, 30 to 60 min resistance), the muscles worked, best record and a daily streak.
 - Three astronauts, 94 days of deterministic history and three scenarios.
 - Global astronaut, day and environment selectors; four time windows and five hazard filters.
 - Ten scalar indicators, including both blood-pressure components; charts with baselines, tooltips and a keyboard-accessible data table.

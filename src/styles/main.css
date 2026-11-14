@@ -913,3 +913,21 @@ label.choice { text-align: center; padding: var(--s2) var(--s2); font-size: 14px
 .cc-k { color: var(--text-3); font-weight: 400; text-align: left; }
 .cc-v small { font-size: 12.5px; font-weight: 400; }
 .cc-streak { display: inline-flex; align-items: center; gap: 6px; }
+
+/* My Health: no side stripes */
+.finding, .finding.is-review, .finding.is-alert, .finding.is-clear { border-left: 0; border-radius: 0; background: none; padding: var(--s5) 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.finding.is-clear { display: flex; align-items: flex-start; gap: var(--s4); }
+.finding.is-clear .finding-title { margin-top: 0; font-size: 19px; }
+.finding.is-clear .finding-summary { margin-top: 2px; }
+.clear-mark { display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 50%; color: var(--ok); background: rgba(95, 194, 154, .12); }
+.indicator-list { border-top: 0; display: grid; gap: 2px; }
+.indicator, .indicator[aria-pressed="true"] { border-left: 0; border-bottom: 0; border-radius: var(--radius-sm); }
+.indicator { padding: var(--s3); }
+.indicator .indicator-name { color: var(--text-2); }
+.indicator-top { align-items: center; }
+.indicator-value { margin-left: auto; }
+.indicator-arrow { flex: none; color: var(--accent-strong); opacity: 0; transform: translateX(-4px); transition: opacity .15s, transform .15s; }
+.indicator[aria-pressed="true"] { background: var(--surface-2); }
+.indicator[aria-pressed="true"] .indicator-name { color: var(--accent-strong); }
+.indicator[aria-pressed="true"] .indicator-arrow { opacity: 1; transform: none; }
+.indicator-bottom { padding-right: 22px; }

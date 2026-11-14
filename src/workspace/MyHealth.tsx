@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpen, Plus, Target } from "lucide-react";
+import { ArrowRight, BookOpen, Check, ChevronRight, Plus, Target } from "lucide-react";
 import { hazardContext, hazards, metricFor, metrics } from "../data/catalog";
 import { evidenceFor } from "../data/evidence";
 import { doseUtilization, selectSeries } from "../engine/monitoring";
@@ -147,10 +147,11 @@ export function MyHealth() {
         </section>
       ) : (
         <section className="finding is-clear" aria-label="No active findings">
-          <h2 className="finding-title">No active findings</h2>
-          <p className="finding-summary">
-            None of the implemented rules is triggered on day {state.day}. That is not a statement of good health: rules cover only some indicators, and symptoms or concerns should be raised with the crew medical officer regardless of this display.
-          </p>
+          <span className="clear-mark" aria-hidden="true"><Check size={18} strokeWidth={2.5} /></span>
+          <div>
+            <h2 className="finding-title">No active findings</h2>
+            <p className="finding-summary">No rule is triggered on day {state.day}. This is not a health clearance, so raise any symptoms with the crew medical officer.</p>
+          </div>
         </section>
       )}
 
@@ -207,6 +208,7 @@ export function MyHealth() {
                     <span className="indicator-top">
                       <span className="indicator-name">{m.short}</span>
                       <span className="indicator-value">{formatValue(f)}</span>
+                      <ChevronRight className="indicator-arrow" size={16} aria-hidden="true" />
                     </span>
                     <span className="indicator-bottom">
                       <span>{changeText(f)}</span>
