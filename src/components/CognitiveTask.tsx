@@ -9,6 +9,23 @@ import type { CogResult, CogTest, CogTrial, Scenario } from "../types";
 
 type RunnerProps = { seed: () => number; onDone: (trials: CogTrial[]) => void };
 
+/** A countdown timer: a depleting bar plus a seconds readout. Restarts whenever resetKey changes. */
+function CountdownBar({ durationMs, resetKey }: { durationMs: number; resetKey: number }) {
+  const [left, setLeft] = useState(Math.ceil(durationMs / 1000));
+  useEffect(() => {
+    setLeft(Math.ceil(durationMs / 1000));
+    const start = performance.now();
+    const iv = setInterval(() => setLeft(Math.max(0, Math.ceil((durationMs - (performance.now() - start)) / 1000))), 200);
+    return () => clearInterval(iv);
+  }, [durationMs, resetKey]);
+  return (
+    <div className="cog-timer-row">
+      <div className="cog-timer-bar" aria-hidden="true"><span key={resetKey} style={{ animationDuration: `${durationMs}ms` }} /></div>
+      <span className="cog-timer-num" role="timer" aria-live="off">{left}s</span>
+    </div>
+  );
+}
+
 /** Digit-Symbol Substitution (DSST, legend shown, ~90 s) and Code Substitution Delayed (CDD, legend hidden). */
 function DsstRunner({ seed, onDone, test, legend, cdKey }: RunnerProps & { test: CogTest; legend: boolean; cdKey: Record<string, number> }) {
   const items = useMemo(() => (test === "DSST" ? dsstItems(seed, cdKey) : cddItems(seed, cdKey)), []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -175,6 +192,7 @@ function VoltRunner({ seed, onDone }: RunnerProps) {
     return (
       <>
         <p className="muted small" aria-live="polite">Studying {i + 1} of {sets.study.length}: memorize this object</p>
+        <CountdownBar durationMs={VOLT_STUDY_MS} resetKey={i} />
         <div className="cog-stage volt-stage"><WireObject id={sets.study[i]} size={150} /></div>
         <p className="cog-hint">Each object shows for 5 seconds; the test starts automatically. There is no practice.</p>
       </>
@@ -236,6 +254,7 @@ function MathRunner({ seed, onDone }: RunnerProps) {
   return (
     <>
       <p className="muted small" aria-live="polite">Problem {i + 1} of {items.length}</p>
+      <CountdownBar durationMs={TRIAL_TIMEOUT_MS} resetKey={i} />
       <div className="cog-stage"><span className="cog-math">{items[i]?.text}</span></div>
       <div className="cog-choices">
         <button className="btn btn-secondary btn-lg" onClick={() => answer(0)}>Less than 5 <kbd>F</kbd></button>
@@ -245,8 +264,8 @@ function MathRunner({ seed, onDone }: RunnerProps) {
   );
 }
 
-function ResultCard({ test, trials, result, saved, onSave, onAgain }: {
-  test: CogTest; trials: CogTrial[]; result: ReturnType<typeof score>; saved: boolean; onSave: () => void; onAgain: () => void;
+function ResultCard({ test, trials, result, onSave, onAgain, onExit }: {
+  test: CogTest; trials: CogTrial[]; result: ReturnType<typeof score>; onSave: () => void; onAgain: () => void; onExit: () => void;
 }) {
   let detail: string;
   if (test === "F2B") {
@@ -263,10 +282,11 @@ function ResultCard({ test, trials, result, saved, onSave, onAgain }: {
       <span className="label">{TESTS[test].name} complete</span>
       <h3>{result.correct} of {result.total} correct · {result.accuracy.toFixed(0)}%</h3>
       <p className="muted">{detail}</p>
-      {test === "DSST" && <p className="muted small">Digit-Symbol is the learning step for the delayed test (CDD), so it is not compared with a baseline. Run CDD after the other tasks today.</p>}
+      {test === "DSST" && <p className="muted small">Digit-Symbol is the learning step for the delayed test (CDD), so it is not compared with a baseline. Run CDD next to recall the legend.</p>}
       <div className="actions">
-        <button className="btn btn-primary" disabled={saved} onClick={onSave}><Check size={16} aria-hidden="true" /> {saved ? "Saved" : "Save result"}</button>
-        <button className="btn btn-quiet" onClick={onAgain}><RotateCcw size={14} aria-hidden="true" /> Run again</button>
+        <button className="btn btn-primary" onClick={onSave}><Check size={16} aria-hidden="true" /> Save and finish</button>
+        <button className="btn btn-secondary" onClick={onAgain}><RotateCcw size={14} aria-hidden="true" /> Run again</button>
+        <button className="btn btn-quiet" onClick={onExit}>All tests</button>
       </div>
     </div>
   );
@@ -279,7 +299,6 @@ export function CognitiveTask({ test, astronautId, scenario, day, onSave, onExit
   const seed = useMemo(() => seeded(`${astronautId}-${day}-${test}-${runId}-${Math.random()}`), [astronautId, day, test, runId]);
   const [started, setStarted] = useState(false);
   const [done, setDone] = useState<CogTrial[] | null>(null);
-  const [saved, setSaved] = useState(false);
   const result = done ? score(done, test) : null;
   const props: RunnerProps = { seed, onDone: setDone };
 
@@ -306,9 +325,10 @@ export function CognitiveTask({ test, astronautId, scenario, day, onSave, onExit
       )}
 
       {done && result && (
-        <ResultCard test={test} trials={done} result={result} saved={saved}
-          onSave={() => { onSave({ id: crypto.randomUUID(), test, astronautId, scenario, day, timestamp: new Date().toISOString(), protocol: BATTERY_PROTOCOL, trials: done, ...result }); setSaved(true); }}
-          onAgain={() => { setStarted(false); setDone(null); setSaved(false); setRunId((n) => n + 1); }} />
+        <ResultCard test={test} trials={done} result={result}
+          onSave={() => { onSave({ id: crypto.randomUUID(), test, astronautId, scenario, day, timestamp: new Date().toISOString(), protocol: BATTERY_PROTOCOL, trials: done, ...result }); onExit(); }}
+          onAgain={() => { setStarted(false); setDone(null); setRunId((n) => n + 1); }}
+          onExit={onExit} />
       )}
     </div>
   );

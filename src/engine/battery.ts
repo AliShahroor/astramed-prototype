@@ -73,8 +73,8 @@ export const TESTS: Record<CogTest, TestInfo> = {
   },
 };
 
-/** DSST teaches the symbol-digit legend that CDD recalls after the other tasks, so CDD is always last. */
-export const ORDER: CogTest[] = ["DSST", "F2B", "MTH", "VOLT", "CDD"];
+/** CDD recalls the symbol-digit legend taught by DSST, so DSST runs first and CDD immediately after it. */
+export const ORDER: CogTest[] = ["DSST", "CDD", "F2B", "MTH", "VOLT"];
 /** DSST is the learning step for CDD and is not compared with a baseline. */
 export const SCORED_TESTS: CogTest[] = ["F2B", "MTH", "VOLT", "CDD"];
 

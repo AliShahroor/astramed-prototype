@@ -256,7 +256,7 @@ function Cognitive() {
           </tbody>
         </table>
       </div>
-      <p className="muted small">Order: DSST, F2B, MTH, VOLT, then CDD (delayed recall of the DSST legend). Throughput = estimated correct responses per minute. F2B also counts missed two-back targets. A drop of 10% or more from your baseline is highlighted for your attention only; it is not a clinical threshold and does not create a finding.</p>
+      <p className="muted small">Order: DSST, then CDD (which recalls the DSST legend), then F2B, MTH, VOLT. Throughput = estimated correct responses per minute. F2B also counts missed two-back targets. A drop of 10% or more from your baseline is highlighted for your attention only; it is not a clinical threshold and does not create a finding.</p>
 
       <div className="split">
         <div>

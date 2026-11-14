@@ -693,6 +693,11 @@ label.choice:focus-within { outline: 2px solid var(--info); outline-offset: 2px;
 .volt-rating { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s2); margin-top: var(--s4); }
 .volt-rating .btn { justify-content: center; }
 .cog-hint { color: var(--text-3); font-size: 13px; margin-top: var(--s3); }
+.cog-timer-row { display: flex; align-items: center; gap: var(--s3); margin: var(--s2) 0 var(--s4); }
+.cog-timer-bar { flex: 1; height: 5px; background: var(--surface-3); border-radius: 3px; overflow: hidden; }
+.cog-timer-bar > span { display: block; height: 100%; background: var(--accent); transform-origin: left center; animation-name: cog-deplete; animation-timing-function: linear; animation-fill-mode: forwards; }
+.cog-timer-num { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--text-2); min-width: 30px; text-align: right; }
+@keyframes cog-deplete { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 .cog-choices:has(> .btn:only-child) { grid-template-columns: minmax(0, 360px); justify-content: center; }
 .btn.is-on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 @media (max-width: 600px) {
