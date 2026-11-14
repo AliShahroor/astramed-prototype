@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, Box, Brain, Calculator, Check, CircleCheck, Eye, Keyboard, Shapes, Timer, type LucideIcon } from "lucide-react";
+import { ArrowRight, Check, CircleCheck, Eye, Timer } from "lucide-react";
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { activities, astronauts } from "../data/catalog";
 import { evidenceFor } from "../data/evidence";
@@ -10,8 +10,6 @@ import { BASELINE_SESSIONS, ORDER, SCORED_TESTS, TESTS, personalBaseline } from 
 import { dayTimestamp, evaluate, selectSeries } from "../engine/monitoring";
 import type { Activity, AssessmentResult, CogResult, CogTest, Completion, Measurement } from "../types";
 import { useWs } from "./context";
-
-const TEST_ICON: Record<CogTest, LucideIcon> = { DSST: Keyboard, CDD: Brain, F2B: Shapes, MTH: Calculator, VOLT: Box };
 
 const TABS = [
   { id: "physical", label: "Physical training" },
@@ -227,8 +225,8 @@ function Cognitive() {
       </p>
       <div className="test-grid" aria-label="Cognitive tests">
         <button className="test-card" onClick={() => setActive("RT")}>
-          <span className="test-card-icon"><Timer size={20} aria-hidden="true" /></span>
-          <span className="test-card-head"><span className="test-card-name">Simple reaction time</span> <span className="test-card-abbr">RT</span></span>
+          <span className="test-card-code">RT</span>
+          <span className="test-card-head"><span className="test-card-name">Simple reaction time</span></span>
           <span className="test-card-measure">Psychomotor speed</span>
           <span className="test-card-foot">
             <span className="test-card-result">{mine.length ? `${mine.at(-1)!.median.toFixed(0)} ms median` : "Not run"}</span>
@@ -241,11 +239,10 @@ function Cognitive() {
           const scored = SCORED_TESTS.includes(t);
           const locked = t === "CDD" && !dsstToday;
           const delta = r?.throughput != null && b.throughput ? ((r.throughput - b.throughput) / b.throughput) * 100 : null;
-          const Icon = TEST_ICON[t];
           return (
             <button key={t} className="test-card" disabled={locked} title={locked ? "Run the Digit-Symbol task first today" : undefined} onClick={() => setActive(t)}>
-              <span className="test-card-icon"><Icon size={20} aria-hidden="true" /></span>
-              <span className="test-card-head"><span className="test-card-name">{TESTS[t].name}</span> <span className="test-card-abbr">{t}</span></span>
+              <span className="test-card-code">{t}</span>
+              <span className="test-card-head"><span className="test-card-name">{TESTS[t].name}</span></span>
               <span className="test-card-measure">{TESTS[t].domain}</span>
               <span className="test-card-foot">
                 <span className="test-card-result">{r ? `${r.accuracy.toFixed(0)}% correct` : locked ? "Needs DSST today" : "Not run"}</span>

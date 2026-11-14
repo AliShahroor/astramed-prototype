@@ -699,20 +699,20 @@ label.choice:focus-within { outline: 2px solid var(--info); outline-offset: 2px;
 .cog-timer-num { font-variant-numeric: tabular-nums; font-size: 13px; color: var(--text-2); min-width: 30px; text-align: right; }
 @keyframes cog-deplete { from { transform: scaleX(1); } to { transform: scaleX(0); } }
 
-/* Cognitive test tiles (square icon cards) */
-.test-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: var(--s4); margin-top: var(--s3); }
-.test-card { aspect-ratio: 1 / 1; display: flex; flex-direction: column; gap: 6px; padding: var(--s4); text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); color: var(--text); overflow: hidden; transition: background-color .15s, border-color .15s, transform .12s, box-shadow .15s; }
-.test-card:hover:not(:disabled) { background: var(--surface-2); border-color: var(--line-strong); transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0, 0, 0, .28); }
+/* Cognitive test tiles (square cards, three per row) */
+.test-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s3); margin-top: var(--s3); max-width: 600px; }
+.test-card { aspect-ratio: 1 / 1; display: flex; flex-direction: column; gap: 4px; padding: var(--s4); text-align: left; background: var(--surface); border: 1px solid transparent; border-radius: var(--radius); color: var(--text); overflow: hidden; transition: background-color .15s, transform .12s, box-shadow .15s; }
+.test-card:hover:not(:disabled) { background: var(--surface-2); transform: translateY(-2px); box-shadow: 0 10px 24px rgba(0, 0, 0, .28); }
 .test-card:disabled { opacity: .5; cursor: not-allowed; }
-.test-card-icon { display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: var(--radius-sm); background: var(--accent-soft); color: var(--accent-strong); margin-bottom: 2px; flex: none; }
-.test-card-head { line-height: 1.22; }
-.test-card-name { font-weight: 600; font-size: 14.5px; }
-.test-card-abbr { color: var(--text-3); font-size: 11.5px; font-weight: 500; font-family: ui-monospace, Menlo, monospace; margin-left: 3px; }
-.test-card-measure { color: var(--text-2); font-size: 12.5px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.test-card-code { font-family: ui-monospace, Menlo, monospace; font-size: 14px; font-weight: 600; letter-spacing: .03em; color: var(--accent-strong); }
+.test-card-head { line-height: 1.2; margin-top: 1px; }
+.test-card-name { font-weight: 600; font-size: 14px; }
+.test-card-measure { color: var(--text-2); font-size: 12px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .test-card-foot { margin-top: auto; display: grid; gap: 1px; }
-.test-card-result { font-weight: 600; font-size: 13px; font-variant-numeric: tabular-nums; }
-.test-card-base { color: var(--text-3); font-size: 11.5px; }
-@media (max-width: 520px) { .test-card { aspect-ratio: auto; } }
+.test-card-result { font-weight: 600; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.test-card-base { color: var(--text-3); font-size: 11px; }
+@media (max-width: 760px) { .test-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .test-grid { grid-template-columns: 1fr; } .test-card { aspect-ratio: auto; } }
 .cog-choices:has(> .btn:only-child) { grid-template-columns: minmax(0, 360px); justify-content: center; }
 .btn.is-on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 @media (max-width: 600px) {
