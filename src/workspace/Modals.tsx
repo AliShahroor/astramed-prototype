@@ -8,6 +8,7 @@ import { initialState } from "../app/useMission";
 import type { Finding, Indicator, Measurement } from "../types";
 import { StatusTag, useWs, type Modal } from "./context";
 import { changeText, formatValue, referenceText } from "./MyHealth";
+import { buildBriefing } from "./briefingData";
 
 export function Modals({ modal, close }: { modal: Modal; close: () => void }) {
   const ws = useWs();
@@ -33,6 +34,7 @@ export function Modals({ modal, close }: { modal: Modal; close: () => void }) {
       </Dialog>
     );
   if (modal.type === "mission") return <MissionDialog close={close} />;
+  if (modal.type === "today") return <TodayBriefing close={close} />;
   if (modal.type === "settings") return <SettingsDialog close={close} />;
   const a = modal.activity;
   const done = ws.state.completions.some((c) => c.activityId === a.id && c.astronautId === ws.astronaut.id && c.day === ws.state.day && c.scenario === ws.state.scenario);
@@ -230,6 +232,97 @@ function LogReading({ initial, onDone }: { initial: Indicator; onDone: () => voi
       <p id="log-err" className="error" role="alert">{error}</p>
       <div className="actions"><button className="btn btn-primary" type="submit"><Plus size={16} aria-hidden="true" /> Save reading</button><button type="button" className="btn btn-quiet" onClick={onDone}>Cancel</button></div>
     </form>
+  );
+}
+
+function TodayBriefing({ close }: { close: () => void }) {
+  const { state, astronaut, mission, open, range } = useWs();
+  const b = buildBriefing(state, astronaut, mission.rows, range);
+  const [step, setStep] = useState(0);
+  const [speaking, setSpeaking] = useState(false);
+  const steps = ["Findings", "Since yesterday", "Crew", "Next steps"];
+  const say = () => {
+    if (!("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(b.spoken);
+    u.rate = 0.95;
+    u.onend = () => setSpeaking(false);
+    speechSynthesis.speak(u);
+    setSpeaking(true);
+  };
+  const go = (href: string) => { if ("speechSynthesis" in window) speechSynthesis.cancel(); close(); location.hash = href.slice(1); };
+  return (
+    <Dialog title={`Today’s briefing · mission day ${b.day}`} wide onClose={() => { if ("speechSynthesis" in window) speechSynthesis.cancel(); close(); }}>
+      <div className="briefing">
+        <ol className="steps-nav" aria-label="Briefing sections">
+          {steps.map((s, i) => (
+            <li key={s}><button aria-current={i === step ? "step" : undefined} onClick={() => setStep(i)}><span className="step-n">{i + 1}</span>{s}</button></li>
+          ))}
+        </ol>
+        <div className="briefing-body" aria-live="polite">
+          {step === 0 && (
+            <>
+              <h3 className="h3">{b.findings.length ? b.headline : "No findings today"}</h3>
+              {b.findings.length === 0 ? <p className="muted">None of the implemented rules is triggered on day {b.day}.</p> : (
+                <ul className="brief-items">
+                  {b.findings.map((f) => (
+                    <li key={f.id}>
+                      <StatusTag status={f.status} plain />
+                      <span className="grow">{f.title}{b.newIds.includes(f.id) && <em className="new-tag">New today</em>}<small className="block muted">{f.summary}</small></span>
+                      <button className="btn btn-link sm" onClick={() => open({ type: "finding", indicator: f.indicator })}>Health card</button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
+          {step === 1 && (
+            <>
+              <h3 className="h3">Since day {b.day - 1}</h3>
+              <p className="muted small">{b.newIds.length} new {b.newIds.length === 1 ? "finding" : "findings"} · {b.resolved.length} resolved</p>
+              {b.resolved.length > 0 && <ul className="brief-items">{b.resolved.map((f) => <li key={f.id}><span className="tone ok">Resolved</span><span className="grow">{f.title}</span></li>)}</ul>}
+              <table className="simple spaced">
+                <thead><tr><th scope="col">Measurement</th><th scope="col">Day {b.day - 1}</th><th scope="col">Day {b.day}</th><th scope="col">Change</th></tr></thead>
+                <tbody>{b.changes.map((c) => <tr key={c.indicator}><td>{c.label}</td><td>{c.yesterday}</td><td>{c.today}</td><td>{c.delta}</td></tr>)}</tbody>
+              </table>
+            </>
+          )}
+          {step === 2 && (
+            <>
+              <h3 className="h3">Crew</h3>
+              <ul className="brief-items">
+                {b.requestsToMe.map((r) => <li key={r.id}><span className="tone warn">Request</span><span className="grow">{r.from} requested a check-in from you</span><button className="btn btn-link sm" onClick={() => go("#/crew")}>Check in</button></li>)}
+                <li><span className={b.myCheckinDue ? "tone warn" : "tone ok"}>{b.myCheckinDue ? "Due" : "Done"}</span><span className="grow">Your check-in for today</span>{b.myCheckinDue && <button className="btn btn-link sm" onClick={() => go("#/crew")}>Check in</button>}</li>
+                <li><span className={b.crewDue.length ? "tone warn" : "tone ok"}>{b.crewDue.length ? "Due" : "Done"}</span><span className="grow">{b.crewDue.length ? `Still to check in: ${b.crewDue.join(", ")}` : "All crewmates have checked in today"}</span></li>
+                <li><span className="tone muted">{b.openNotes}</span><span className="grow">Open notifications relevant to you</span><button className="btn btn-link sm" onClick={() => go("#/crew")}>Open crew</button></li>
+              </ul>
+            </>
+          )}
+          {step === 3 && (
+            <>
+              <h3 className="h3">Next steps</h3>
+              <ul className="brief-items">
+                {b.tasks.map((t) => (
+                  <li key={t.id} className={t.done ? "done" : ""}>
+                    <span className={t.done ? "tone ok" : "tone warn"}>{t.done ? "Done" : "To do"}</span>
+                    <span className="grow">{t.text}<small className="block muted">{t.detail}</small></span>
+                    {!t.done && <button className="btn btn-secondary sm" onClick={() => go(t.to)}>Open</button>}
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
+        <div className="briefing-foot">
+          {"speechSynthesis" in window && (speaking
+            ? <button className="btn btn-quiet" onClick={() => { speechSynthesis.cancel(); setSpeaking(false); }}><Square size={14} aria-hidden="true" /> Stop</button>
+            : <button className="btn btn-quiet" onClick={say}><Volume2 size={16} aria-hidden="true" /> Read briefing aloud</button>)}
+          <span className="grow" />
+          {step > 0 && <button className="btn btn-quiet" onClick={() => setStep(step - 1)}>Back</button>}
+          {step < steps.length - 1 ? <button className="btn btn-primary" onClick={() => setStep(step + 1)}>Next</button> : <button className="btn btn-primary" onClick={() => go(b.tasks.find((t) => !t.done)?.to ?? "#/health")}>{b.tasks.some((t) => !t.done) ? "Start first task" : "Done"}</button>}
+        </div>
+      </div>
+    </Dialog>
   );
 }
 

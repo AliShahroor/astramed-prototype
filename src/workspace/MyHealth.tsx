@@ -53,11 +53,10 @@ function readingContext(f: Finding) {
 }
 
 export function MyHealth() {
-  const { astronaut, findings, state, range, setRange, indicator, setIndicator, hazard, setHazard, open, mission } = useWs();
+  const { astronaut, findings, state, range, setRange, indicator, setIndicator, hazard, setHazard, open, mission, environment } = useWs();
   const active = findings.filter((f) => f.status === "Review" || f.status === "Alert");
   const primary = active[0];
   const others = active.slice(1);
-  const insufficient = findings.filter((f) => f.status === "Insufficient data").length;
   const visible = metrics.filter((m) => hazard === "All hazards" || m.hazards.includes(hazard));
   const shown = visible.some((m) => m.id === indicator) ? indicator : visible[0].id;
   const trend = selectSeries(mission.rows, astronaut.id, state.scenario, shown, state.day, range);
@@ -81,67 +80,43 @@ export function MyHealth() {
 
   return (
     <>
-      <section className="status-bar" aria-labelledby="status-h">
-        <div>
-          <h2 id="status-h" className="sr-only">Monitoring status</h2>
-          <p className="status-line">{summary}</p>
-          <p className="muted small">
-            Mission day {state.day} · compared with your preflight baseline over the last {range === 94 ? "94 days" : `${range} days`}
-            {insufficient > 0 && ` · ${insufficient} ${insufficient === 1 ? "indicator" : "indicators"} without enough data`}
-          </p>
+      <section className="who" aria-labelledby="who-h">
+        <span className="avatar xl" aria-hidden="true">{astronaut.initials}</span>
+        <div className="grow">
+          <h2 id="who-h" className="who-name">{astronaut.name}</h2>
+          <p className="muted">{astronaut.role} · {environment.name} · mission day {state.day}</p>
+          <p className="who-summary">{summary}</p>
         </div>
-        <button className="btn btn-secondary" onClick={() => open({ type: "log" })}>
-          <Plus size={16} aria-hidden="true" /> Log reading
-        </button>
-      </section>
-
-      <section className="readings" aria-label="Latest measurements">
-        {GROUPS.map((g) => (
-          <div key={g.label} className="reading-group">
-            <h2 className="list-label">{g.label}</h2>
-            <dl>
-              {g.ids.map((id) => {
-                const f = findings.find((x) => x.indicator === id)!;
-                const m = metricFor(id);
-                const flagged = f.status === "Review" || f.status === "Alert";
-                return (
-                  <div key={id} className={flagged ? "reading flagged" : "reading"}>
-                    <dt>
-                      <button className="link-plain" onClick={() => { setHazard("All hazards"); setIndicator(id); document.getElementById("trends")?.scrollIntoView({ behavior: "smooth" }); }}>{m.short}</button>
-                    </dt>
-                    <dd>
-                      <span className="reading-value">{readingValue(f)}</span>
-                      <span className={`reading-delta ${f.status === "Alert" ? "alert" : flagged ? "warn" : ""}`}>{readingContext(f)}</span>
-                    </dd>
-                  </div>
-                );
-              })}
-            </dl>
-          </div>
-        ))}
+        <div className="who-actions">
+          <button className="btn btn-primary" onClick={() => open({ type: "today" })}>Review today’s briefing</button>
+          <button className="btn btn-secondary" onClick={() => open({ type: "log" })}>
+            <Plus size={16} aria-hidden="true" /> Log reading
+          </button>
+        </div>
       </section>
 
       {primary ? (
         <section className={`finding ${primary.status === "Alert" ? "is-alert" : "is-review"}`} aria-labelledby="finding-h">
           <div className="finding-meta">
+            <span className="label">Explainable health card</span>
             <StatusTag status={primary.status} />
             <span className="muted small">{primary.rule.origin}</span>
           </div>
           <h2 id="finding-h" className="finding-title">{primary.title}</h2>
-          <p className="finding-summary">{primary.explanation}</p>
-          <dl className="facts">
+          <dl className="hero-facts">
             <div><dt>Observed</dt><dd>{formatValue(primary)}</dd></div>
-            <div><dt>Compared with</dt><dd>{referenceText(primary)}</dd></div>
-            <div><dt>Change</dt><dd>{changeText(primary)}</dd></div>
-            <div><dt>Period</dt><dd>{primary.window} · {primary.persistence} consecutive {primary.persistence === 1 ? "day" : "days"} meeting the rule</dd></div>
+            <div className="vs"><dt>{primary.indicator === "co2" || primary.indicator === "radiation" ? "NASA reference" : "Your baseline"}</dt><dd>{referenceText(primary).replace(/ (personal baseline|NASA reference.*|NASA career reference)$/, "")}</dd></div>
+            <div><dt>Change</dt><dd className={primary.status === "Alert" ? "alert-text" : "warn-text"}>{changeText(primary).replace(/ vs (baseline|reference)$/, "")}</dd></div>
+            <div><dt>Period</dt><dd>{primary.window}<small className="block muted">{primary.persistence} consecutive {primary.persistence === 1 ? "day" : "days"} meeting the rule</small></dd></div>
           </dl>
+          <p className="finding-summary">{primary.explanation}</p>
           <div className="finding-next">
             <span className="label">Next check</span>
             <p>{primary.next}</p>
           </div>
           <div className="actions">
             <button className="btn btn-primary" onClick={() => open({ type: "finding", indicator: primary.indicator })}>
-              Open health card <ArrowRight size={16} aria-hidden="true" />
+              Why was this flagged? <ArrowRight size={16} aria-hidden="true" />
             </button>
             {primary.indicator === "reaction" && (
               <a className="btn btn-secondary" href="#/countermeasures/cognitive">
@@ -178,6 +153,33 @@ export function MyHealth() {
           </p>
         </section>
       )}
+
+      <h2 className="h2 readings-h">All measurements</h2>
+      <section className="readings" aria-label="Latest measurements">
+        {GROUPS.map((g) => (
+          <div key={g.label} className="reading-group">
+            <h2 className="list-label">{g.label}</h2>
+            <dl>
+              {g.ids.map((id) => {
+                const f = findings.find((x) => x.indicator === id)!;
+                const m = metricFor(id);
+                const flagged = f.status === "Review" || f.status === "Alert";
+                return (
+                  <div key={id} className={flagged ? "reading flagged" : "reading"}>
+                    <dt>
+                      <button className="link-plain" onClick={() => { setHazard("All hazards"); setIndicator(id); document.getElementById("trends")?.scrollIntoView({ behavior: "smooth" }); }}>{m.short}</button>
+                    </dt>
+                    <dd>
+                      <span className="reading-value">{readingValue(f)}</span>
+                      <span className={`reading-delta ${f.status === "Alert" ? "alert" : flagged ? "warn" : ""}`}>{readingContext(f)}</span>
+                    </dd>
+                  </div>
+                );
+              })}
+            </dl>
+          </div>
+        ))}
+      </section>
 
       <section id="trends" className="trends" aria-labelledby="trends-h">
         <div className="section-head">

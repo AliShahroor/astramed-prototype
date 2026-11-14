@@ -10,6 +10,7 @@ export type Modal =
   | { type: "log"; indicator?: Indicator }
   | { type: "settings" }
   | { type: "mission" }
+  | { type: "today" }
   | { type: "activity"; activity: Activity }
   | null;
 

@@ -1,5 +1,7 @@
 # ASTRAMED
 
+**Live demo: https://alishahroor.github.io/astramed-prototype/** · Repository: https://github.com/AliShahroor/astramed-prototype
+
 **Understand the change. Inspect the evidence. Make the next check.**
 
 ASTRAMED is Team Code Blue’s local-first astronaut health-monitoring and decision-support prototype, developed for the brief “Create Health Monitoring Software for Astronauts on Space Missions.” It uses fictional adults and reproducible synthetic measurements. It does not diagnose disease, prescribe treatment, determine fitness for duty, or replace flight surgeons.
