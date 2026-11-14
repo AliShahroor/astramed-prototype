@@ -24,6 +24,7 @@ export function initialState(): AppState {
     checklists: {},
     cognitive: [],
     checkinEntries: [],
+    groundReports: [],
   };
 }
 function readState(): AppState {
@@ -47,7 +48,7 @@ function readState(): AppState {
       Array.isArray(s.session.briefed)
     )
       // Fields added after the first release are filled in rather than discarding saved records.
-      return { ...s, checkinEntries: Array.isArray(s.checkinEntries) ? s.checkinEntries : [], cognitive: Array.isArray(s.cognitive) ? s.cognitive : [], videoViews: Array.isArray(s.videoViews) ? s.videoViews : [], checklists: s.checklists && typeof s.checklists === "object" ? s.checklists : {} };
+      return { ...s, groundReports: Array.isArray(s.groundReports) ? s.groundReports : [], checkinEntries: Array.isArray(s.checkinEntries) ? s.checkinEntries : [], cognitive: Array.isArray(s.cognitive) ? s.cognitive : [], videoViews: Array.isArray(s.videoViews) ? s.videoViews : [], checklists: s.checklists && typeof s.checklists === "object" ? s.checklists : {} };
   } catch {
     /* Invalid storage falls back to a reproducible demo. */
   }

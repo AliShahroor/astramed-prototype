@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, Lock, X } from "lucide-react";
+import { Check, Copy, Lock, Send, X } from "lucide-react";
+import { Dialog } from "../components/Dialog";
 import { Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { activities, astronauts, metricFor } from "../data/catalog";
+import { activities, astronauts, environments, metricFor, mission as missionInfo } from "../data/catalog";
 import { CABIN_ID, CREW_WINDOW_DAYS } from "../app/useMission";
 import { usePersisted } from "../app/usePersisted";
 import { dayTimestamp, evaluateAll, selectSeries } from "../engine/monitoring";
@@ -152,7 +153,10 @@ function Queue({ entries, onSelect }: { entries: Entry[]; onSelect: (id: string)
 
   return (
     <section className="queue" aria-labelledby="queue-h">
-      <h2 id="queue-h" className="h2">Needs attention</h2>
+      <div className="section-head">
+        <h2 id="queue-h" className="h2">Needs attention</h2>
+        <GroundReportButton entries={entries} />
+      </div>
       {items.length === 0 ? (
         <p className="queue-clear"><Check size={16} aria-hidden="true" /> All caught up. Everyone has checked in and nothing is open.</p>
       ) : (
@@ -374,6 +378,7 @@ function Activity() {
   }
   for (const r of state.assessments) if (r.scenario === state.scenario && r.day <= state.day) events.push({ t: dayTimestamp(r.day, 13), text: `${firstName(r.astronautId)} completed a reaction-time assessment` });
   for (const c of state.completions) if (c.scenario === state.scenario && c.day <= state.day && c.kind === "session") events.push({ t: c.timestamp, text: `${firstName(c.astronautId)} recorded ${c.minutes} min of ${activities.find((x) => x.id === c.activityId)?.title.toLowerCase() ?? "exercise"}` });
+  for (const g of state.groundReports) if (g.scenario === state.scenario && g.day <= state.day) events.push({ t: `${dayTimestamp(g.day).slice(0, 11)}${g.time}`, text: `${firstName(g.by)} sent a crew report to ground` });
   events.sort((x, y) => y.t.localeCompare(x.t));
   const shown = all ? events : events.slice(0, 6);
   return (
@@ -386,5 +391,86 @@ function Activity() {
         </>
       )}
     </section>
+  );
+}
+
+/* ───────── report to ground ───────── */
+
+/** Plain-text crew status for the next ground contact. Only information each profile shares is included. */
+export function composeReport(state: AppState, by: Astronaut, entries: Entry[], crewFindings: Record<string, Finding[]>, note: string) {
+  const env = environments.find((e) => e.id === state.environmentId)!;
+  const lines: string[] = [
+    `${missionInfo.name} · crew status · mission day ${state.day}`,
+    `Prepared by ${by.name} (${by.role}) · ${env.name}`,
+    "",
+  ];
+  for (const a of astronauts) {
+    const c = checkinState(entries, a.id, state.day);
+    const f = crewFindings[a.id].filter((x) => (x.status === "Review" || x.status === "Alert") && x.indicator !== "co2");
+    const concern = visible(state).find((n) => isConcern(n) && !n.acknowledged && n.astronautId === a.id);
+    lines.push(`${a.name}, ${a.role}`);
+    lines.push(`  Check-in: ${c.last ? `${when(c.last, state.day)}, ${CHECKIN_STATUS[c.last.status].toLowerCase()}` : "none"}${c.due !== "done" ? " (due)" : ""}`);
+    if (a.share || a.id === by.id) lines.push(`  Findings: ${f.length ? f.map((x) => x.title.replace(" · repeat to confirm", " (unconfirmed)")).join("; ") : "none"}`);
+    else lines.push("  Findings: not shared by this crew member");
+    if (concern) lines.push(`  Open request: ${concern.title}`);
+    lines.push("");
+  }
+  const co2 = crewFindings[astronauts[0].id].find((x) => x.indicator === "co2");
+  lines.push(`Cabin CO₂: ${co2?.current ? `${co2.current.value} mmHg one-hour average (NASA limit 3 mmHg)` : "no current reading"}`);
+  if (note.trim()) lines.push("", `Note: ${note.trim()}`);
+  lines.push("", "Synthetic demonstration data. Decision support only, not a diagnosis.");
+  return lines.join("\n");
+}
+
+function GroundReportButton({ entries }: { entries: Entry[] }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button className="btn btn-secondary sm" onClick={() => setOpen(true)}><Send size={14} aria-hidden="true" /> Report to ground</button>
+      {open && <GroundReportDialog entries={entries} onClose={() => setOpen(false)} />}
+    </>
+  );
+}
+
+function GroundReportDialog({ entries, onClose }: { entries: Entry[]; onClose: () => void }) {
+  const { state, setState, astronaut, mission, notify } = useWs();
+  const env = environments.find((e) => e.id === state.environmentId)!;
+  const [note, setNote] = useState("");
+  const [sent, setSent] = useState<string | null>(null);
+  const text = composeReport(state, astronaut, entries, mission.crewFindings, note);
+  const past = state.groundReports.filter((g) => g.scenario === state.scenario).slice(-3).reverse();
+  const send = () => {
+    const t = nowTime();
+    setState((s) => ({ ...s, groundReports: [...s.groundReports, { id: crypto.randomUUID(), scenario: s.scenario, day: s.day, time: t, by: astronaut.id, environmentId: s.environmentId, text }] }));
+    setSent(t);
+    notify(`Crew report queued for ground at ${t}.`);
+  };
+  return (
+    <Dialog title="Report to ground" wide onClose={onClose}>
+      <div className="ground">
+        <p className="muted">
+          A crew status summary for flight surgeons, built from what each crew member shares. Signal delay ({env.name}): <strong>{env.delay}</strong>.
+          Transmission is simulated; nothing leaves this device.
+        </p>
+        <pre className="report" aria-label="Report preview">{text}</pre>
+        {sent ? (
+          <div className="sent" role="status"><Check size={15} aria-hidden="true" /><span className="grow">Queued at {sent} for the next ground contact. Expected one-way delay: {env.delay}.</span></div>
+        ) : (
+          <>
+            <label className="field-label">Add a note (optional)<input className="field" value={note} maxLength={200} onChange={(e) => setNote(e.target.value)} placeholder="e.g. Ali will repeat the reaction-time test after rest" /></label>
+            <div className="actions">
+              <button className="btn btn-primary" onClick={send}><Send size={15} aria-hidden="true" /> Queue report</button>
+              <button className="btn btn-quiet" onClick={() => { navigator.clipboard?.writeText(text).then(() => notify("Report copied."), () => notify("Copy is not available in this browser.")); }}><Copy size={15} aria-hidden="true" /> Copy text</button>
+            </div>
+          </>
+        )}
+        {past.length > 0 && (
+          <div className="past">
+            <h3 className="h3">Earlier reports</h3>
+            <ul className="record-list">{past.map((g) => <li key={g.id}><span>Day {g.day}, {g.time} · {fullName(g.by)}</span><span className="muted">{environments.find((e) => e.id === g.environmentId)?.name}</span></li>)}</ul>
+          </div>
+        )}
+      </div>
+    </Dialog>
   );
 }

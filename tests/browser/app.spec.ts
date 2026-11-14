@@ -147,6 +147,22 @@ test("cross-profile: Ali asks Mohammad to check in, signs out; Mohammad answers"
   await expect(page.locator(".log")).toContainText("Mohammad answered Ali’s request");
 });
 
+test("crew report to ground respects sharing and is logged", async ({ page }) => {
+  await page.goto("./#/crew");
+  await page.getByRole("button", { name: "Report to ground" }).click();
+  const d = page.getByRole("dialog");
+  const report = d.getByLabel("Report preview");
+  await expect(report).toContainText("Ali Shahroor, Mission specialist");
+  await expect(report).toContainText("Findings: not shared by this crew member");
+  await expect(report).toContainText("NASA limit 3 mmHg");
+  await d.getByLabel("Add a note (optional)").fill("Ali will retest after rest");
+  await expect(report).toContainText("Note: Ali will retest after rest");
+  await d.getByRole("button", { name: "Queue report" }).click();
+  await expect(d).toContainText("Queued at");
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".log")).toContainText("Ali sent a crew report to ground");
+});
+
 test("daily briefing: findings, changes, crew, tasks", async ({ page }) => {
   await page.goto("./#/health");
   await expect(page.locator(".who-name")).toHaveText("Ali Shahroor");

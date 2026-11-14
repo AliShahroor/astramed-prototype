@@ -152,6 +152,15 @@ export interface CogResult {
   /** CPT only: responses slower than 700 ms or missing */
   lapses?: number;
 }
+export interface GroundReport {
+  id: string;
+  scenario: Scenario;
+  day: number;
+  time: string;
+  by: string;
+  environmentId: string;
+  text: string;
+}
 export interface CheckInEntry {
   id: string;
   astronautId: string;
@@ -226,6 +235,7 @@ export interface AppState {
   videoViews: VideoView[];
   cognitive: CogResult[];
   checkinEntries: CheckInEntry[];
+  groundReports: GroundReport[];
   /** checked demonstration-checklist steps, keyed scenario-astronaut-activity-day */
   checklists: Record<string, number[]>;
 }
