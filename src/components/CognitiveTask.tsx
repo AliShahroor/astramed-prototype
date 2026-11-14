@@ -32,13 +32,20 @@ function DsstRunner({ seed, onDone, test, legend, cdKey }: RunnerProps & { test:
   const [i, setI] = useState(0);
   const [fb, setFb] = useState<"" | "ok" | "no">("");
   const [remaining, setRemaining] = useState(DSST_SECONDS);
-  const onset = useRef(performance.now());
-  const endAt = useRef(performance.now() + DSST_SECONDS * 1000);
+  const onset = useRef(0);
+  const endAt = useRef(0);
   const log = useRef<CogTrial[]>([]);
   const finished = useRef(false);
   const live = useRef(i);
   live.current = i;
   const finish = useCallback(() => { if (!finished.current) { finished.current = true; onDone(log.current); } }, [onDone]);
+
+  // Start the clocks on mount (reading the time during render is impure). Declared before the timer effect so it runs first.
+  useEffect(() => {
+    const now = performance.now();
+    onset.current = now;
+    endAt.current = now + DSST_SECONDS * 1000;
+  }, []);
 
   useEffect(() => {
     if (test !== "DSST") return;
@@ -105,6 +112,7 @@ function NbackRunner({ seed, onDone }: RunnerProps) {
   const log = useRef<CogTrial[]>([]);
   const finished = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const advanceRef = useRef<() => void>(() => {});
 
   const advance = useCallback(() => {
     const cur = idx.current;
@@ -120,8 +128,9 @@ function NbackRunner({ seed, onDone }: RunnerProps) {
     setPressed(false);
     setI(next);
     onset.current = performance.now();
-    timer.current = setTimeout(advance, F2B_ISI_MS);
+    timer.current = setTimeout(() => advanceRef.current(), F2B_ISI_MS);
   }, [seq, onDone]);
+  useEffect(() => { advanceRef.current = advance; }, [advance]);
 
   const mark = useCallback(() => {
     if (idx.current >= 0 && !resp.current.pressed) { resp.current = { pressed: true, rt: performance.now() - onset.current }; setPressed(true); }
@@ -216,10 +225,11 @@ function VoltRunner({ seed, onDone }: RunnerProps) {
 function MathRunner({ seed, onDone }: RunnerProps) {
   const items = useMemo(() => mathItems(seed), []); // eslint-disable-line react-hooks/exhaustive-deps
   const [i, setI] = useState(0);
-  const onset = useRef(performance.now());
+  const onset = useRef(0); // set on mount by the effect below
   const log = useRef<CogTrial[]>([]);
   const finished = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const answerRef = useRef<(choice: 0 | 1 | null) => void>(() => {});
   const live = useRef(0);
   live.current = i;
 
@@ -232,8 +242,9 @@ function MathRunner({ seed, onDone }: RunnerProps) {
     const next = idx + 1;
     if (next >= items.length) { finished.current = true; onDone(log.current); return; }
     setI(next); onset.current = performance.now();
-    timer.current = setTimeout(() => answer(null), TRIAL_TIMEOUT_MS);
+    timer.current = setTimeout(() => answerRef.current(null), TRIAL_TIMEOUT_MS);
   }, [items, onDone]);
+  useEffect(() => { answerRef.current = answer; }, [answer]);
 
   useEffect(() => {
     onset.current = performance.now();
@@ -295,8 +306,9 @@ function ResultCard({ test, trials, result, onSave, onAgain, onExit }: {
 export function CognitiveTask({ test, astronautId, scenario, day, onSave, onExit }: { test: CogTest; astronautId: string; scenario: Scenario; day: number; onSave: (r: CogResult) => void; onExit: () => void }) {
   const info = TESTS[test];
   const key = useMemo(() => codeKey(astronautId, day), [astronautId, day]);
-  const [runId, setRunId] = useState(0);
-  const seed = useMemo(() => seeded(`${astronautId}-${day}-${test}-${runId}-${Math.random()}`), [astronautId, day, test, runId]);
+  // Fresh random salt per run, picked in the Start click handler (Math.random during render is impure).
+  const [salt, setSalt] = useState(0);
+  const seed = useMemo(() => seeded(`${astronautId}-${day}-${test}-${salt}`), [astronautId, day, test, salt]);
   const [started, setStarted] = useState(false);
   const [done, setDone] = useState<CogTrial[] | null>(null);
   const result = done ? score(done, test) : null;
@@ -313,7 +325,7 @@ export function CognitiveTask({ test, astronautId, scenario, day, onSave, onExit
         <div className="cog-intro">
           <p>{info.task}</p>
           <p className="cog-hint">Modelled on {info.source}. Browser re-creation for demonstration, not the validated instrument, and not scored against normative data.</p>
-          <div className="actions"><button className="btn btn-primary" onClick={() => setStarted(true)}><Play size={16} aria-hidden="true" /> Start</button></div>
+          <div className="actions"><button className="btn btn-primary" onClick={() => { setSalt(Math.random()); setStarted(true); }}><Play size={16} aria-hidden="true" /> Start</button></div>
         </div>
       )}
 
@@ -327,7 +339,7 @@ export function CognitiveTask({ test, astronautId, scenario, day, onSave, onExit
       {done && result && (
         <ResultCard test={test} trials={done} result={result}
           onSave={() => { onSave({ id: crypto.randomUUID(), test, astronautId, scenario, day, timestamp: new Date().toISOString(), protocol: BATTERY_PROTOCOL, trials: done, ...result }); onExit(); }}
-          onAgain={() => { setStarted(false); setDone(null); setRunId((n) => n + 1); }}
+          onAgain={() => { setStarted(false); setDone(null); }}
           onExit={onExit} />
       )}
     </div>
