@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, Check, CircleCheck, Eye, Timer } from "lucide-react";
+import { ArrowRight, Box, Brain, Calculator, Check, CircleCheck, Eye, Keyboard, Shapes, Timer, type LucideIcon } from "lucide-react";
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { activities, astronauts } from "../data/catalog";
 import { evidenceFor } from "../data/evidence";
@@ -10,6 +10,8 @@ import { BASELINE_SESSIONS, ORDER, SCORED_TESTS, TESTS, personalBaseline } from 
 import { dayTimestamp, evaluate, selectSeries } from "../engine/monitoring";
 import type { Activity, AssessmentResult, CogResult, CogTest, Completion, Measurement } from "../types";
 import { useWs } from "./context";
+
+const TEST_ICON: Record<CogTest, LucideIcon> = { DSST: Keyboard, CDD: Brain, F2B: Shapes, MTH: Calculator, VOLT: Box };
 
 const TABS = [
   { id: "physical", label: "Physical training" },
@@ -223,40 +225,38 @@ function Cognitive() {
         <button className="btn btn-link inline" onClick={() => openEvidence("cognition")}>About the Cognition battery</button> ·{" "}
         <button className="btn btn-link inline" onClick={() => openEvidence("winscat")}>WinSCAT</button>
       </p>
-      <div className="table-wrap" role="region" aria-label="Cognitive tests" tabIndex={0}>
-        <table className="tests">
-          <thead><tr><th scope="col">Test</th><th scope="col">Measures</th><th scope="col">Last result</th><th scope="col">Personal baseline</th><th scope="col"><span className="sr-only">Start</span></th></tr></thead>
-          <tbody>
-            <tr>
-              <th scope="row">Simple reaction time <span className="mono muted">RT</span></th>
-              <td className="muted">Psychomotor speed</td>
-              <td>{mine.length ? `${mine.at(-1)!.median.toFixed(0)} ms median` : <span className="muted">Not run</span>}</td>
-              <td>{astronaut.baseline.reaction.value} ms (simulated preflight)</td>
-              <td className="right"><button className="btn btn-secondary sm" onClick={() => setActive("RT")}>Start</button></td>
-            </tr>
-            {ORDER.map((t) => {
-              const r = last(t);
-              const b = personalBaseline(state.cognitive, t, astronaut.id);
-              const scored = SCORED_TESTS.includes(t);
-              const locked = t === "CDD" && !dsstToday;
-              const delta = r?.throughput != null && b.throughput ? ((r.throughput - b.throughput) / b.throughput) * 100 : null;
-              return (
-                <tr key={t}>
-                  <th scope="row">{TESTS[t].name} <span className="mono muted">{t}</span></th>
-                  <td className="muted">{TESTS[t].domain}</td>
-                  <td>{r ? <>{r.accuracy.toFixed(0)}% correct · {r.throughput?.toFixed(1) ?? "-"}/min<small className="muted block">Day {r.day}</small></> : <span className="muted">Not run</span>}</td>
-                  <td>{!scored ? <span className="muted">Learning step, not compared</span> : b.ready ? <>{b.throughput!.toFixed(1)}/min{delta !== null && <small className={`block ${delta <= -10 ? "warn-text" : "muted"}`}>Latest {delta >= 0 ? "+" : ""}{delta.toFixed(0)}%</small>}</> : <span className="muted">Building: {b.sessions} of {BASELINE_SESSIONS}</span>}</td>
-                  <td className="right">
-                    <button className="btn btn-secondary sm" disabled={locked} title={locked ? "Run the Digit-Symbol task first today" : undefined} onClick={() => setActive(t)}>Start</button>
-                    {locked && <small className="muted block">Needs DSST today</small>}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="test-grid" aria-label="Cognitive tests">
+        <button className="test-card" onClick={() => setActive("RT")}>
+          <span className="test-card-icon"><Timer size={20} aria-hidden="true" /></span>
+          <span className="test-card-head"><span className="test-card-name">Simple reaction time</span> <span className="test-card-abbr">RT</span></span>
+          <span className="test-card-measure">Psychomotor speed</span>
+          <span className="test-card-foot">
+            <span className="test-card-result">{mine.length ? `${mine.at(-1)!.median.toFixed(0)} ms median` : "Not run"}</span>
+            <span className="test-card-base">Baseline {astronaut.baseline.reaction.value} ms</span>
+          </span>
+        </button>
+        {ORDER.map((t) => {
+          const r = last(t);
+          const b = personalBaseline(state.cognitive, t, astronaut.id);
+          const scored = SCORED_TESTS.includes(t);
+          const locked = t === "CDD" && !dsstToday;
+          const delta = r?.throughput != null && b.throughput ? ((r.throughput - b.throughput) / b.throughput) * 100 : null;
+          const Icon = TEST_ICON[t];
+          return (
+            <button key={t} className="test-card" disabled={locked} title={locked ? "Run the Digit-Symbol task first today" : undefined} onClick={() => setActive(t)}>
+              <span className="test-card-icon"><Icon size={20} aria-hidden="true" /></span>
+              <span className="test-card-head"><span className="test-card-name">{TESTS[t].name}</span> <span className="test-card-abbr">{t}</span></span>
+              <span className="test-card-measure">{TESTS[t].domain}</span>
+              <span className="test-card-foot">
+                <span className="test-card-result">{r ? `${r.accuracy.toFixed(0)}% correct` : locked ? "Needs DSST today" : "Not run"}</span>
+                <span className={`test-card-base${delta !== null && delta <= -10 ? " warn-text" : ""}`}>
+                  {!scored ? "Learning step, not compared" : b.ready ? `Baseline ${b.throughput!.toFixed(1)}/min${delta !== null ? ` · ${delta >= 0 ? "+" : ""}${delta.toFixed(0)}%` : ""}` : `Building: ${b.sessions} of ${BASELINE_SESSIONS}`}
+                </span>
+              </span>
+            </button>
+          );
+        })}
       </div>
-      <p className="muted small">Order: DSST, then CDD (which recalls the DSST legend), then F2B, MTH, VOLT. Throughput = estimated correct responses per minute. F2B also counts missed two-back targets. A drop of 10% or more from your baseline is highlighted for your attention only; it is not a clinical threshold and does not create a finding.</p>
 
       <div className="split">
         <div>

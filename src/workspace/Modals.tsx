@@ -173,7 +173,6 @@ function EvidenceView({ id }: { id: string }) {
           <div><dt>Verification</dt><dd>{e.verified ? "Checked against the original NASA source on 14 November 2026. The cited revision is pinned; this does not certify mission applicability." : "Not verified."}</dd></div>
         </dl>
         <a className="btn btn-secondary" href={e.url} target="_blank" rel="noreferrer">Open original NASA source <ArrowUpRight size={15} aria-hidden="true" /></a>
-        <p className="muted small">This summary works offline. The original source needs a connection.</p>
       </article>
     </div>
   );
