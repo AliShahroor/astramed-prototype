@@ -86,6 +86,10 @@ function HealthCard({ f }: { f: Finding }) {
         <div><dt>Change</dt><dd>{changeText(f)}</dd></div>
         <div><dt>Source</dt><dd>{f.current?.source ?? "No reading"}</dd></div>
       </dl>
+      <details className="calc">
+        <summary>Show calculation</summary>
+        <Calculation f={f} />
+      </details>
       <dl className="qa">
         {rows.map(([q, a]) => (
           <div key={q}><dt>{q}</dt><dd>{a}</dd></div>
@@ -118,6 +122,27 @@ function HealthCard({ f }: { f: Finding }) {
       </div>
       <p className="muted small provenance">{f.rule.id} v{f.rule.version} · calculated for {f.generatedAt.replace("T", " ").slice(0, 16)} UTC (simulated clock) · not a diagnosis</p>
     </article>
+  );
+}
+
+function Calculation({ f }: { f: Finding }) {
+  const m = metricFor(f.indicator);
+  if (!f.current) return <p className="muted">No reading in the selected window, so nothing is calculated.</p>;
+  const v = f.current.value;
+  if (f.indicator === "co2") {
+    const lim = evidenceFor("co2").limit!;
+    return <p className="mono calc-line">difference = one-hour average − reference = {v} − {lim} = {(v - lim).toFixed(1)} mmHg → {v > lim ? "above reference (Alert)" : "at or below reference"}</p>;
+  }
+  if (f.indicator === "radiation") {
+    const lim = evidenceFor("radiation").limit!;
+    return <p className="mono calc-line">utilization = career dose ÷ career reference × 100 = {v} ÷ {lim} × 100 = {((v / lim) * 100).toFixed(1)}%</p>;
+  }
+  if (f.baseline === null || f.change === null) return <p className="muted">No personal baseline, so no change is calculated.</p>;
+  return (
+    <>
+      <p className="mono calc-line">change = (observed − baseline) ÷ baseline × 100 = ({v} − {f.baseline}) ÷ {f.baseline} × 100 = {f.change.toFixed(1)}%</p>
+      <p className="muted small">Rule: {f.rule.criterion} Consecutive days meeting it in {f.window}: {f.persistence}. Unit: {m.unit}. Rule {f.rule.id} v{f.rule.version}.</p>
+    </>
   );
 }
 

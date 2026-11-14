@@ -1,6 +1,12 @@
 # Validation record · 14 November 2026
 
-## Redesign and quality pass (local, not yet published)
+## Operations and training pass
+
+Sidebar shell with Simulation and profile menus; environment-based theming; copy rewritten to interface language; crew operations dashboard (summary, roster, detail panel with shared trends, attention timeline, notifications, activity log, check-in requests); My Health readings grouped by system with a calculation view in the health card; Physical training library with NASA videos, checklists and session logging. State migration keeps earlier saved records.
+
+Checks run: `npx tsc --noEmit` passed; `npm run lint` passed; `npm test` 18/18; `npm run build` passed; Playwright suite rewritten to 11 tests (entry flow, direct links, calculation view, logging and theme, crew dashboard and privacy, training tracking, real timed assessment, restart, 1440/1280/390 overflow, offline with unavailable-video state, axe WCAG 2.1 AA across all four environment themes, entry screens, pages and the health card): 11/11 passed against a local production preview. Both NASA MP4s were confirmed to play with captions loaded in Chrome (76 and 82 cues); YouTube playback was not verified beyond the embed URL.
+
+## Redesign and quality pass
 
 Changes: new entry flow (welcome, demo access, mission briefing) with hash routing and direct links; App.tsx split into screens and workspace modules; a new restrained visual system (top navigation, profile menu, simulation bar, fewer boxes, consistent 26/18/16/15 px type scale); My Health reorganised around one current-status line, the primary finding and an indicator list beside the chart; Crew rebuilt as an operational roster with a separate cabin row, notification timeline and check-in choices; Countermeasures tabs are linkable routes and include a voluntary crew participation view.
 

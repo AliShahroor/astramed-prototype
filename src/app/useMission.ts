@@ -20,6 +20,8 @@ export function initialState(): AppState {
     checkins: {},
     voice: false,
     session: { entered: false, briefed: [] },
+    videoViews: [],
+    checklists: {},
   };
 }
 function readState(): AppState {
@@ -42,7 +44,8 @@ function readState(): AppState {
       typeof s.session.entered === "boolean" &&
       Array.isArray(s.session.briefed)
     )
-      return s;
+      // Fields added after the first release are filled in rather than discarding saved records.
+      return { ...s, videoViews: Array.isArray(s.videoViews) ? s.videoViews : [], checklists: s.checklists && typeof s.checklists === "object" ? s.checklists : {} };
   } catch {
     /* Invalid storage falls back to a reproducible demo. */
   }
@@ -101,6 +104,7 @@ export function useMission() {
               : "Check-in requested by monitoring policy",
           acknowledged: false,
           timestamp: dayTimestamp(state.day, 9),
+          kind: "policy",
         });
       }
     setState((prev) => {

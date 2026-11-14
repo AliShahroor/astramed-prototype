@@ -1,48 +1,58 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const health = (page: Page) => page.getByRole("heading", { name: "My Health", exact: true, level: 1 });
+const title = (page: Page, name: string) => page.getByRole("heading", { name, exact: true, level: 1 });
 const nav = (page: Page, name: string) => page.getByRole("navigation", { name: "Primary" }).getByRole("link", { name: new RegExp(`^${name}`) });
-
-async function runTrials(page: Page) {
-  const target = page.locator(".response-target");
+async function sim(page: Page) {
+  const panel = page.getByRole("group", { name: "Simulation controls" });
+  if (!(await panel.isVisible())) await page.getByRole("button", { name: "Simulation" }).click();
+  return panel;
+}
+async function scenario(page: Page, value: string) {
+  await (await sim(page)).getByLabel("Demo scenario").selectOption(value);
+  await page.keyboard.press("Escape");
+}
+async function respond(page: Page) {
   await expect(page.getByRole("button", { name: "Respond now", exact: true })).toBeVisible({ timeout: 5000 });
   await page.waitForTimeout(160);
-  await target.press("Space");
+  await page.locator(".response-target").press("Space");
 }
 
-test("entry flow: welcome, demo access, briefing, then My Health; briefing is skippable", async ({ page }) => {
+test("entry: welcome, profile selection, briefing, workspace; briefing skipped on return; quick demo", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("./");
-  await expect(page.getByRole("heading", { name: /Your health\. Your mission\./ })).toBeVisible();
-  await page.getByRole("button", { name: "Enter Mission Demo" }).click();
-  await expect(page.getByRole("heading", { name: "Choose a crew profile" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "ASTRAMED", level: 1 })).toBeVisible();
+  await expect(page.getByText("Astronaut Health Monitoring System")).toBeVisible();
+  await page.getByRole("button", { name: "Enter Mission System" }).click();
+  await expect(page.getByRole("heading", { name: "Select crew profile" })).toBeVisible();
   await page.getByRole("button", { name: /Enter as Maya Chen/ }).click();
-  await expect(page.getByRole("heading", { name: "Ares I: mission day 94" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Mission briefing/ })).toBeVisible();
   await page.getByLabel("Environment").selectOption("moon");
   await expect(page.getByText("About 1.3 s one-way")).toBeVisible();
-  await page.getByRole("button", { name: "Continue to My Health" }).click();
-  await expect(health(page)).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("data-env", "moon");
+  await page.getByRole("button", { name: "Open Workspace" }).click();
+  await expect(title(page, "Personal Health Overview")).toBeVisible();
   await expect(page.getByText("Maya Chen · Commander", { exact: false }).first()).toBeVisible();
-  // Return to welcome and re-enter the same profile: the briefing is skipped.
   await page.getByRole("button", { name: /Profile: Maya Chen/ }).click();
-  await page.getByRole("menuitem", { name: "Return to welcome" }).click();
-  await expect(page.getByRole("button", { name: "Continue as Maya Chen" })).toBeVisible();
-  await page.getByRole("button", { name: "Enter Mission Demo" }).click();
+  await page.getByRole("menuitem", { name: "Return to profile selection" }).click();
   await page.getByRole("button", { name: /Enter as Maya Chen/ }).click();
-  await expect(health(page)).toBeVisible();
+  await expect(title(page, "Personal Health Overview")).toBeVisible();
+  await page.getByRole("button", { name: /Profile:/ }).click();
+  await page.getByRole("menuitem", { name: "Sign out of demo session" }).click();
+  await page.getByRole("button", { name: "Quick Demo" }).click();
+  await expect(page.getByText("Alex Morgan · Mission specialist", { exact: false }).first()).toBeVisible();
   expect(errors).toEqual([]);
 });
 
 test("direct links open the workspace without blocking", async ({ page }) => {
   await page.goto("./#/countermeasures/cognitive");
-  await expect(page.getByRole("heading", { name: "Countermeasures", level: 1 })).toBeVisible();
+  await expect(title(page, "Exercise & Cognitive Assessments")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Reaction-time assessment" })).toBeVisible();
   await page.goto("./#/crew");
-  await expect(page.getByRole("heading", { name: "Crew", level: 1 })).toBeVisible();
+  await expect(title(page, "Crew Health & Operations")).toBeVisible();
 });
 
-test("dynamic findings, health card, evidence and scenarios", async ({ page }) => {
+test("findings, health card calculation, evidence and scenarios", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("./#/health");
@@ -50,55 +60,81 @@ test("dynamic findings, health card, evidence and scenarios", async ({ page }) =
   await page.getByRole("button", { name: "Open health card" }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toContainText("+23.2% vs baseline");
-  await expect(dialog).toContainText("3 consecutive recorded mission days");
+  await dialog.getByText("Show calculation").click();
+  await expect(dialog).toContainText("(351 − 285) ÷ 285 × 100 = 23.2%");
   await dialog.getByRole("button", { name: /Spaceflight Standard Measures/ }).click();
   await expect(dialog).toContainText("NASA collects sleep reports");
   await expect(page.getByRole("link", { name: /Open original NASA source/ })).toHaveAttribute("href", "https://www.nasa.gov/reference/standard-measures/");
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
-  await page.getByLabel("Demo scenario").selectOption("nominal");
+  await scenario(page, "nominal");
   await expect(page.getByRole("heading", { name: "No active findings" })).toBeVisible();
-  await page.getByLabel("Demo scenario").selectOption("environment");
+  await scenario(page, "environment");
   await expect(page.getByRole("heading", { name: "Cabin CO₂ exceeds the reference" })).toBeVisible();
-  await expect(page.locator(".finding .facts")).toContainText("+1.1 mmHg vs reference");
   await page.getByRole("button", { name: "Open health card" }).click();
-  await expect(page.getByRole("dialog")).toContainText("3 mmHg NASA reference (1 h average)");
+  await page.getByRole("dialog").getByText("Show calculation").click();
+  await expect(page.getByRole("dialog")).toContainText("4.1 − 3 = 1.1 mmHg");
   expect(errors).toEqual([]);
 });
 
-test("logging, persistence, profile switching, environment, hazards and day", async ({ page }) => {
+test("logging, persistence, profile switching, environment theme, hazards and day", async ({ page }) => {
   await page.goto("./#/health");
   await page.getByRole("button", { name: "Log reading" }).click();
-  const form = page.getByRole("dialog");
-  await form.getByLabel("Value (ms)").fill("270");
-  await form.getByRole("button", { name: "Save reading" }).click();
-  await expect(page.locator(".vitals")).toContainText("270 ms");
+  await page.getByRole("dialog").getByLabel("Value (ms)").fill("270");
+  await page.getByRole("dialog").getByRole("button", { name: "Save reading" }).click();
+  await expect(page.locator(".readings")).toContainText("270 ms");
   await page.reload();
-  await expect(page.locator(".vitals")).toContainText("270 ms");
+  await expect(page.locator(".readings")).toContainText("270 ms");
   await page.getByRole("button", { name: /Profile: Alex Morgan/ }).click();
   await page.getByRole("menuitemradio", { name: /Samira Noor/ }).click();
   await expect(page.getByText("Samira Noor · Crew medical officer", { exact: false }).first()).toBeVisible();
-  await page.getByRole("banner").getByLabel("Environment").selectOption("moon");
-  await expect(page.getByText("0.16 g", { exact: false }).first()).toBeVisible();
+  await page.getByRole("banner").getByLabel("Environment").selectOption("earth");
+  await expect(page.locator("html")).toHaveAttribute("data-env", "earth");
+  await expect(page.locator(".mission-panel")).toContainText("1 g");
   await page.getByRole("button", { name: "Space radiation" }).click();
   await expect(page.getByRole("heading", { name: "Career effective radiation dose", exact: true })).toBeVisible();
-  await page.getByLabel("Previous mission day").click();
-  await expect(page.getByLabel("Mission day", { exact: true })).toHaveValue("93");
+  const panel = await sim(page);
+  await panel.getByLabel("Previous mission day").click();
+  await expect(panel.getByLabel("Mission day", { exact: true })).toHaveValue("93");
 });
 
-test("crew acknowledgement, check-in, activity and progress", async ({ page }) => {
+test("crew dashboard: summary, detail charts, privacy, request, acknowledge, check-in, activity log", async ({ page }) => {
   await page.goto("./#/crew");
-  await expect(page.getByText("Check-in requested by monitoring policy")).toBeVisible();
-  await page.getByRole("button", { name: "Acknowledge", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Acknowledged" })).toBeDisabled();
-  await page.getByRole("button", { name: "Doing okay" }).click();
-  await expect(page.getByRole("button", { name: "Doing okay" })).toHaveAttribute("aria-pressed", "true");
-  await nav(page, "Countermeasures").click();
-  await page.getByRole("button", { name: "Review Mobility check" }).click();
-  await page.getByRole("button", { name: "Record simulated completion" }).click();
-  await page.getByRole("link", { name: "Progress" }).click();
-  await expect(page.locator(".stat-row")).toContainText("1 day");
-  await expect(page.locator(".record-list").first()).toContainText("Mobility check");
+  await expect(page.getByRole("region", { name: "Crew summary" })).toContainText("Unacknowledged notifications");
+  await expect(page.locator(".crew-detail")).toContainText("Shared wellness trends");
+  await expect(page.locator(".spark")).toHaveCount(3);
+  await page.getByRole("button", { name: /Leo Okafor/ }).click();
+  await expect(page.locator(".crew-detail")).toContainText("limited sharing");
+  await expect(page.locator(".spark")).toHaveCount(0);
+  await page.getByRole("button", { name: /Maya Chen/ }).click();
+  await page.getByRole("button", { name: "Request check-in" }).click();
+  await expect(page.locator("table.notes")).toContainText("Check-in requested by Alex Morgan");
+  await page.getByRole("button", { name: "Acknowledge", exact: true }).first().click();
+  await expect(page.locator("table.notes")).toContainText("Acknowledged");
+  await page.locator(".who-btn", { hasText: "Alex Morgan" }).click();
+  await page.getByRole("button", { name: "No concerns" }).click();
+  await expect(page.getByRole("button", { name: "No concerns" })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator(".log")).toContainText("Alex checked in: No concerns");
+  await expect(page.locator(".timeline-grid")).toBeVisible();
+});
+
+test("physical training: video, checklist and session are tracked separately", async ({ page }) => {
+  await page.goto("./#/countermeasures/physical");
+  await expect(page.getByRole("heading", { name: "Resistance exercise", level: 2 })).toBeVisible();
+  await expect(page.locator(".video-credit")).toContainText("NASA Johnson Space Center");
+  await page.locator(".training-item", { hasText: "Mobility check" }).click();
+  for (const box of await page.locator(".check-row input").all()) await box.check();
+  await expect(page.getByText("Checklist complete for today")).toBeVisible();
+  await page.getByLabel("Duration (min)").fill("0");
+  await page.getByRole("button", { name: "Record session" }).click();
+  await expect(page.locator("#sess-err")).toContainText("between 1 and 240");
+  await page.getByLabel("Duration (min)").fill("12");
+  await page.getByRole("button", { name: "Record session" }).click();
+  await expect(page.locator(".training-history")).toContainText("Session · 12 min");
+  await expect(page.locator(".training-history")).toContainText("Demonstration checklist completed");
+  await page.getByRole("link", { name: "History" }).click();
+  await expect(page.locator(".stat-row")).toContainText("Sessions recorded1");
+  await expect(page.locator(".stat-row")).toContainText("Exercise minutes12");
 });
 
 test("real assessment: early trial excluded, five valid trials saved to health", async ({ page }) => {
@@ -107,35 +143,33 @@ test("real assessment: early trial excluded, five valid trials saved to health",
   await page.getByRole("button", { name: "Wait for the signal…" }).click();
   await expect(page.getByText("Too early.", { exact: false })).toBeVisible();
   await page.getByRole("button", { name: "Next trial", exact: true }).click();
-  await runTrials(page);
+  await respond(page);
   await page.getByRole("button", { name: "Begin recorded assessment" }).click();
   for (let i = 0; i < 5; i++) {
-    await runTrials(page);
+    await respond(page);
     if (i < 4) await page.getByRole("button", { name: "Next trial", exact: true }).click();
   }
-  await expect(page.getByText("Assessment complete", { exact: false })).toBeVisible();
   await page.getByRole("button", { name: "Save assessment result" }).click();
   await expect(page.getByRole("button", { name: "Saved to health history" })).toBeVisible();
-  await expect(page.locator("table.simple")).toContainText("94");
   await nav(page, "My Health").click();
   await page.locator(".indicator", { hasText: "Reaction time" }).click();
   await page.getByRole("button", { name: "Explain this indicator" }).click();
   await expect(page.getByRole("dialog")).toContainText("Browser assessment");
 });
 
-test("form validation and reset from the profile menu", async ({ page }) => {
+test("form validation and restart from the profile menu", async ({ page }) => {
   await page.goto("./#/health");
   await page.getByRole("button", { name: "Log reading" }).click();
   await page.getByRole("dialog").getByLabel("Indicator").selectOption("sleep");
   await page.getByLabel("Value (h)").fill("30");
   await page.getByRole("button", { name: "Save reading" }).click();
-  await expect(page.getByRole("alert")).toContainText("Data-quality");
+  await expect(page.getByRole("alert").filter({ hasText: "Data-quality" })).toBeVisible();
   await page.keyboard.press("Escape");
-  await page.getByLabel("Demo scenario").selectOption("nominal");
+  await scenario(page, "nominal");
   page.once("dialog", (d) => d.accept());
   await page.getByRole("button", { name: /Profile:/ }).click();
-  await page.getByRole("menuitem", { name: "Reset demo" }).click();
-  await expect(page.getByLabel("Demo scenario")).toHaveValue("fatigue");
+  await page.getByRole("menuitem", { name: "Restart demonstration" }).click();
+  await expect((await sim(page)).getByLabel("Demo scenario")).toHaveValue("fatigue");
 });
 
 test("responsive layouts at 1440, 1280 and 390 pixels", async ({ page }) => {
@@ -144,46 +178,53 @@ test("responsive layouts at 1440, 1280 and 390 pixels", async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("./");
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    if (width !== 1280) await page.screenshot({ path: `docs/validation/welcome-${width}.png`, fullPage: true });
-    for (const p of ["health", "crew", "countermeasures"]) {
+    if (width !== 1280) await page.screenshot({ path: `docs/validation/welcome-${width}.png` });
+    for (const p of ["health", "crew", "countermeasures/physical"]) {
       await page.goto(`./#/${p}`);
-      await expect(page.locator("main h1")).toBeVisible();
+      await expect(page.locator(".topbar h1")).toBeVisible();
       await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-      if (p === "health" || width !== 1280) await page.screenshot({ path: `docs/validation/${p === "health" ? "overview" : p}-${width}.png`, fullPage: true });
+      const name = p === "health" ? "overview" : p.split("/")[0];
+      if (p === "health" || width !== 1280) await page.screenshot({ path: `docs/validation/${name}-${width}.png`, fullPage: true });
     }
   }
 });
 
-test("offline reload preserves shell, scenarios, evidence and navigation", async ({ page, context }) => {
+test("offline: workspace, evidence and assessment work; uncached video shows unavailable state", async ({ page, context }) => {
   await page.goto("./#/health");
   await page.evaluate(async () => { await navigator.serviceWorker.ready; });
   await page.reload();
   await page.waitForFunction(() => !!navigator.serviceWorker.controller);
   await context.setOffline(true);
   await page.reload();
-  await expect(health(page)).toBeVisible();
-  await page.getByLabel("Demo scenario").selectOption("environment");
+  await expect(title(page, "Personal Health Overview")).toBeVisible();
+  await scenario(page, "environment");
   await page.getByRole("button", { name: "Open health card" }).click();
   await page.getByRole("dialog").getByRole("button", { name: /OCHMO/ }).click();
   await expect(page.getByRole("dialog")).toContainText("at most 3 mmHg");
   await page.getByRole("button", { name: "Close dialog" }).click();
   await nav(page, "Countermeasures").click();
-  await expect(page.getByRole("heading", { name: "Activity library" })).toBeVisible();
-  await page.getByRole("link", { name: "Cognitive" }).click();
+  await expect(page.getByText("Video unavailable")).toBeVisible();
+  await expect(page.getByText("not stored for offline use")).toBeVisible();
+  await page.getByRole("link", { name: "Cognitive assessment" }).click();
   await page.getByRole("button", { name: "Start practice" }).click();
-  await runTrials(page);
+  await respond(page);
   await expect(page.getByRole("button", { name: "Begin recorded assessment" })).toBeVisible();
   await context.setOffline(false);
 });
 
-test("basic accessibility of entry screens, pages and dialogs", async ({ page }) => {
+test("accessibility of entry screens, pages and dialogs", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   const { default: AxeBuilder } = await import("@axe-core/playwright");
   const check = async () => {
     const r = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
     expect(r.violations.map((v) => ({ id: v.id, nodes: v.nodes.map((n) => n.target) }))).toEqual([]);
   };
-  for (const h of ["./", "./#/access", "./#/briefing", "./#/health", "./#/crew", "./#/countermeasures/cognitive", "./#/countermeasures/progress"]) {
+  for (const env of ["mars", "moon", "earth", "orbit"]) {
+    await page.goto("./#/health");
+    await page.getByRole("banner").getByLabel("Environment").selectOption(env);
+    await check();
+  }
+  for (const h of ["./", "./#/access", "./#/briefing", "./#/crew", "./#/countermeasures/physical", "./#/countermeasures/cognitive", "./#/countermeasures/progress"]) {
     await page.goto(h);
     await expect(page.locator("h1").first()).toBeVisible();
     await check();

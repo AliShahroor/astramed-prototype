@@ -257,45 +257,89 @@ function makeBaseline(overrides: Partial<Record<Indicator, number>>) {
     ]),
   ) as Astronaut["baseline"];
 }
+const NASA_HRP = "https://www.nasa.gov/hrp/hrp-videos/";
+const ECLIPS = "https://assets.science.nasa.gov/content/dam/science/cds/eclips/assets/videos";
+const HOW = "https://images-assets.nasa.gov/video/jsc2025m000002_How_Do_Astronauts_Exercise_in_Space_250106-MP4/jsc2025m000002_How_Do_Astronauts_Exercise_in_Space_250106-MP4";
+/**
+ * Training library. Videos are NASA educational footage, embedded with attribution (verified 14 Nov 2026):
+ * NASA video is generally not subject to US copyright; NASA must be credited and no endorsement implied.
+ * Checklists are demonstration steps, not individual exercise prescriptions.
+ */
 export const activities: Activity[] = [
+  {
+    id: "resistance",
+    title: "Resistance exercise",
+    category: "Resistance",
+    duration: "Part of the roughly two-hour daily ISS exercise period",
+    equipment: "Advanced Resistive Exercise Device (ARED): vacuum cylinders provide adjustable load in microgravity",
+    purpose: "Loads muscle and bone, which lose mass when gravity no longer loads them through the day.",
+    description: "Squats, deadlifts and other lifts on a vacuum-cylinder resistance device.",
+    instructions: [
+      "Follow the loads and exercises in your mission exercise plan.",
+      "Secure the harness and foot restraints before loading the device.",
+      "Keep a controlled tempo through the full range of motion.",
+    ],
+    steps: ["Review today’s planned exercises and loads", "Check harness and foot restraints", "Confirm device load setting with the plan", "Record any pain, dizziness or equipment issue"],
+    evidenceId: "exercise",
+    video: { kind: "youtube", id: "YxImeOomkUk", title: "Working Out Aboard the Space Station", credit: "NASA Johnson Space Center", duration: "4:41", captions: "English captions (YouTube)", shows: "Expedition 26 Commander Scott Kelly demonstrates ARED on the ISS.", page: NASA_HRP },
+  },
+  {
+    id: "treadmill",
+    title: "Treadmill aerobic exercise",
+    category: "Aerobic",
+    duration: "Scheduled within the daily exercise period",
+    equipment: "Treadmill with bungee or harness system that pulls the runner toward the belt (current ISS unit: T2/COLBERT)",
+    purpose: "Aerobic conditioning with impact loading through the legs and spine.",
+    description: "Walking or running while a harness holds the astronaut against the treadmill.",
+    instructions: [
+      "Adjust the harness so the load is spread across shoulders and hips.",
+      "Start at the planned speed and harness load; increase only as planned.",
+      "Stop if the harness causes discomfort or pain.",
+    ],
+    steps: ["Fit and adjust the harness", "Set planned speed and load", "Complete the planned duration", "Log harness comfort and any issues"],
+    evidenceId: "exercise",
+    video: { kind: "mp4", src: `${ECLIPS}/our-world-exercise-equipment/video.mp4`, track: `${ECLIPS}/our-world-exercise-equipment/video.en.vtt`, crossOrigin: true, title: "Our World: Exercise Equipment", credit: "NASA eClips", duration: "5:04", captions: "English captions (NASA eClips)", shows: "A NASA trainer demonstrates the cycle ergometer, ARED and the earlier TVIS treadmill with a bungee harness.", page: "https://science.nasa.gov/eclips/videos/exercise-equipment/", size: "24 MB" },
+  },
+  {
+    id: "cycle",
+    title: "Cycle ergometer training",
+    category: "Aerobic",
+    duration: "Scheduled within the daily exercise period",
+    equipment: "Vibration-isolated cycle ergometer with clip-in pedals (ISS: CEVIS)",
+    purpose: "Aerobic conditioning without impact; workload can be set precisely.",
+    description: "Pedalling against a set workload while seated or strapped in.",
+    instructions: [
+      "Clip in and secure the restraint before starting.",
+      "Ride at the workload in your exercise plan.",
+      "Note heart-rate response and any symptoms for your record.",
+    ],
+    steps: ["Clip in and secure restraint", "Set planned workload", "Complete planned duration", "Note heart-rate response and symptoms"],
+    evidenceId: "exercise",
+    video: { kind: "mp4", src: `${HOW}~small.mp4`, track: "media/how-astronauts-exercise.en.vtt", crossOrigin: false, title: "How Do Astronauts Exercise in Space?", credit: "NASA", duration: "1:29", captions: "English captions (NASA)", shows: "Explains why ISS crews exercise about two hours a day and shows the harnessed treadmill, the vibration-isolated bike and the resistance machine.", page: "https://images.nasa.gov/details/jsc2025m000002_How_Do_Astronauts_Exercise_in_Space_250106-MP4", size: "17 MB" },
+  },
   {
     id: "mobility",
     title: "Mobility check",
-    category: "Movement",
-    duration: "5 min · illustrative",
-    description:
-      "A gentle, self-paced mobility demonstration. Use approved restraints and mission procedures.",
-    steps: [
-      "Confirm clearance, equipment and a stable position with the crew medical officer.",
-      "Explore comfortable shoulder and ankle motion without added load.",
-      "Stop for pain, dizziness or equipment concerns; record the check separately from medical clearance.",
-    ],
-  },
-  {
-    id: "resistance",
-    title: "Resistance session review",
-    category: "Strength",
-    duration: "10 min · illustrative review",
-    description:
-      "Review the mission-approved resistance plan. NASA uses specialized exercise equipment; this app does not prescribe a workout.",
-    steps: [
-      "Review the approved equipment setup and personal exercise plan.",
-      "Confirm restraint and loading with the assigned operator.",
-      "Record completion only after the actual approved session; demonstration completion is simulated here.",
-    ],
+    category: "Mobility",
+    duration: "About 5 minutes",
+    equipment: "No equipment; use restraints or handholds as required",
+    purpose: "A short, unloaded range-of-motion check.",
+    description: "A gentle, self-paced mobility routine. Use approved restraints and mission procedures.",
+    instructions: ["Confirm a stable position.", "Move shoulders, hips and ankles through a comfortable range without load.", "Stop for pain or dizziness."],
+    steps: ["Confirm clearance and a stable position", "Shoulder and ankle range of motion without load", "Note any pain, dizziness or restriction"],
+    evidenceId: "exercise",
   },
   {
     id: "recovery",
-    title: "Recovery & routine check",
+    title: "Rest and schedule review",
     category: "Recovery",
-    duration: "3 min · illustrative",
-    description:
-      "Review your work-rest schedule and note barriers to a consistent rest period.",
-    steps: [
-      "Review the recent sleep history and planned rest opportunity.",
-      "Note interruptions and schedule concerns for a crew check-in.",
-      "Use established mission procedures for follow-up; this activity does not treat fatigue.",
-    ],
+    duration: "About 3 minutes",
+    equipment: "None",
+    purpose: "Reviews the work–rest schedule; it does not treat fatigue.",
+    description: "Review your work–rest schedule and note anything that interrupts your rest period.",
+    instructions: ["Compare recent sleep with your planned rest period.", "Note interruptions to raise at a crew check-in."],
+    steps: ["Review recent sleep history", "Note interruptions and schedule conflicts", "Raise concerns at a crew check-in"],
+    evidenceId: "measures",
   },
 ];
 export function metricFor(id: Indicator) {

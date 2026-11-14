@@ -1,72 +1,51 @@
-import { ArrowRight, BookOpen, Gauge, WifiOff } from "lucide-react";
-import { astronauts, mission } from "../data/catalog";
+import { ArrowRight } from "lucide-react";
+import { astronauts, environments, mission } from "../data/catalog";
 import type { AppState } from "../types";
 import { Trajectory, Wordmark } from "./brand";
 
-export function Welcome({ state, onEnter, onContinue }: { state: AppState; onEnter: () => void; onContinue: () => void }) {
+export function Welcome({ state, onEnter, onQuick, onContinue }: { state: AppState; onEnter: () => void; onQuick: () => void; onContinue: () => void }) {
   const current = astronauts.find((a) => a.id === state.astronautId)!;
+  const env = environments.find((e) => e.id === state.environmentId)!;
   return (
     <div className="entry">
       <header className="entry-top">
         <Wordmark />
-        <span className="entry-meta">Team Code Blue · NASA Space Apps Challenge 2026 prototype</span>
+        <span className="entry-meta">Team Code Blue · NASA Space Apps Challenge 2026</span>
       </header>
       <main id="main" className="entry-main welcome">
         <div className="welcome-copy">
-          <h1 className="welcome-title">
-            Your health. Your mission.
-            <br />
-            Informed decisions beyond Earth.
-          </h1>
+          <p className="system-id">Astronaut Health Monitoring System</p>
+          <h1 className="welcome-title">ASTRAMED</h1>
           <p className="lede">
-            ASTRAMED compares each astronaut’s measurements with their own preflight baseline, explains every flag
-            step by step, and links it to the NASA evidence behind it. The analysis runs on board, without waiting
-            for Earth.
+            Compares each astronaut’s measurements with their own preflight baseline, explains why a reading was flagged,
+            and links the finding to the NASA standard or study behind it. Runs on board without a ground connection.
           </p>
           <div className="welcome-actions">
             <button className="btn btn-primary btn-lg" onClick={onEnter}>
-              Enter Mission Demo <ArrowRight size={18} aria-hidden="true" />
+              Enter Mission System <ArrowRight size={18} aria-hidden="true" />
             </button>
-            {state.session.entered && (
-              <button className="btn btn-quiet btn-lg" onClick={onContinue}>
-                Continue as {current.name}
-              </button>
-            )}
+            <button className="btn btn-secondary btn-lg" onClick={onQuick}>Quick Demo</button>
           </div>
-          <ul className="capabilities">
-            <li>
-              <Gauge size={18} aria-hidden="true" />
-              <div>
-                <strong>Explainable findings</strong>
-                <span>Every flag shows the reading, the baseline, the change and the rule that fired.</span>
-              </div>
-            </li>
-            <li>
-              <BookOpen size={18} aria-hidden="true" />
-              <div>
-                <strong>NASA evidence, packaged locally</strong>
-                <span>Standards and research are cited by section, together with their limitations.</span>
-              </div>
-            </li>
-            <li>
-              <WifiOff size={18} aria-hidden="true" />
-              <div>
-                <strong>Local-first</strong>
-                <span>Analysis runs in the browser; the production build caches itself for offline use.</span>
-              </div>
-            </li>
-          </ul>
+          {state.session.entered && (
+            <p className="resume">
+              Last session: {current.name}, mission day {state.day}.{" "}
+              <button className="btn btn-link inline" onClick={onContinue}>Resume</button>
+            </p>
+          )}
+          <dl className="system-facts">
+            <div><dt>Mission</dt><dd>{mission.name}, fictional Mars transit</dd></div>
+            <div><dt>Crew profiles</dt><dd>{astronauts.length}, all fictional</dd></div>
+            <div><dt>Data</dt><dd>Synthetic, reproducible</dd></div>
+            <div><dt>Context</dt><dd>{env.name}</dd></div>
+          </dl>
         </div>
         <figure className="welcome-figure" aria-hidden="true">
           <Trajectory day={state.day} />
-          <figcaption>
-            {mission.name} · fictional Mars transit · mission day {state.day}
-          </figcaption>
+          <figcaption>Schematic transit, not to scale · mission day {state.day}</figcaption>
         </figure>
       </main>
       <footer className="entry-foot">
-        All crew and measurements are synthetic. ASTRAMED is an unvalidated prototype, not a medical device, and does
-        not replace a flight surgeon.
+        Prototype for demonstration. All crew data are synthetic. ASTRAMED does not diagnose and does not replace a flight surgeon.
       </footer>
     </div>
   );

@@ -26,13 +26,13 @@ export function Briefing({
       </header>
       <main id="main" className="entry-main narrow">
         <p className="kicker">
-          Signed in for the demo as <strong>{a.name}</strong> · {a.role}{" "}
+          Demo profile: <strong>{a.name}</strong> · {a.role}{" "}
           <button className="btn btn-link inline" onClick={onSwitch}>
             Change
           </button>
         </p>
-        <h1 className="h1">{mission.name}: mission day {state.day}</h1>
-        <p className="lede">A short orientation before your health view. You will not see this again for this profile unless you open it from the profile menu.</p>
+        <h1 className="h1">Mission briefing · {mission.name}</h1>
+        <p className="lede">Current mission context and the monitoring functions available to you.</p>
 
         <dl className="brief-grid">
           <div>
@@ -66,7 +66,7 @@ export function Briefing({
           </div>
         </dl>
 
-        <h2 className="h2">What ASTRAMED monitors</h2>
+        <h2 className="h2">Monitoring functions</h2>
         <ul className="brief-list">
           <li>Sleep, reaction time, heart rate, blood pressure, oxygen saturation, activity and strength, each compared with your own preflight baseline.</li>
           <li>Cabin CO₂ against the NASA-STD-3001 one-hour average reference, and career radiation dose against the NASA career reference.</li>
@@ -82,11 +82,11 @@ export function Briefing({
 
         <div className="brief-actions">
           <button className="btn btn-primary btn-lg" onClick={() => onContinue(remember)}>
-            Continue to My Health <ArrowRight size={18} aria-hidden="true" />
+            Open Workspace <ArrowRight size={18} aria-hidden="true" />
           </button>
           <label className="check">
             <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
-            Skip this briefing next time for {a.name.split(" ")[0]}
+            Skip the briefing next time for {a.name.split(" ")[0]}
           </label>
         </div>
       </main>

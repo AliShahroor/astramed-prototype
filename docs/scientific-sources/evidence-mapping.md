@@ -18,3 +18,15 @@ Original sources reviewed on 14 November 2026. Local summaries are packaged in `
 The NASA standard landing page advertises a later Volume 2 download. This implementation deliberately pins the specification’s Rev D requirement as documented by the official technical brief rather than silently claiming compliance with a new revision. Before operational use, a qualified reviewer must select the applicable mission standard and verify every requirement and dose convention.
 
 Baseline counts, the percentages used for personal deviations, gravity-context strings, illustrative communication delays, synthetic drift and activity durations are Code Blue simulation assumptions. Only the two explicitly documented NASA reference values are used as numerical standard comparisons. Status labels and notification mappings remain prototype choices even when a NASA reference is compared.
+
+## Training videos (Countermeasures → Physical training)
+
+Checked 14 November 2026 against the NASA Images and Media Usage Guidelines (https://www.nasa.gov/nasa-brand-center/images-and-media/). NASA video is generally not subject to US copyright, may be used for educational and informational web pages, and NASA must be credited. No endorsement is implied, and no NASA insignia is used. None of these pages marked third-party copyright. Videos stream from NASA; nothing loads before the user presses play, and they are not cached for offline use.
+
+| Activity | Video | Credit | Media | Captions | Note |
+|---|---|---|---|---|---|
+| Resistance exercise | “Working Out Aboard the Space Station” (4:41) | NASA Johnson Space Center | YouTube `YxImeOomkUk` (official NASA Johnson channel), embedded via youtube-nocookie | Uploaded English track | Scott Kelly demonstrates ARED (Expedition 26). Listed on https://www.nasa.gov/hrp/hrp-videos/ |
+| Treadmill aerobic exercise | “Our World: Exercise Equipment” (~5:04) | NASA eClips | NASA-hosted MP4 (assets.science.nasa.gov, CORS enabled) | NASA VTT | Shows the cycle ergometer, ARED and the **earlier TVIS treadmill**, not T2/COLBERT; the app says so. No English T2-specific NASA video was found. |
+| Cycle ergometer training | “How Do Astronauts Exercise in Space?” (1:29) | NASA | images-assets.nasa.gov MP4 (`~small`, 17 MB) | NASA SRT converted to `public/media/how-astronauts-exercise.en.vtt` | Narrated overview of treadmill, vibration-isolated bike and resistance machine; hardware is not named in the narration. |
+
+The checklists and instructions beside each video are Code Blue demonstration content, not NASA exercise prescriptions.

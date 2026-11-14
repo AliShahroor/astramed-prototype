@@ -14,14 +14,11 @@ export function DemoAccess({ state, onEnter, onBack }: { state: AppState; onEnte
         <button className="btn btn-link back" onClick={onBack}>
           <ArrowLeft size={16} aria-hidden="true" /> Back
         </button>
-        <h1 className="h1">Choose a crew profile</h1>
-        <p className="lede">
-          Each profile opens that astronaut’s own health view on {mission.name}. Crew settings, scenario and records are
-          shared across profiles.
-        </p>
+        <h1 className="h1">Select crew profile</h1>
+        <p className="lede">Opens the selected astronaut’s health record on {mission.name}.</p>
         <p className="notice-line">
           <Info size={16} aria-hidden="true" />
-          Demonstration only. There are no passwords and no real authentication; every profile is fictional.
+          Simulated access for demonstration. No password is required and no real account exists.
         </p>
         <ul className="profile-list" aria-label="Crew profiles">
           {astronauts.map((a) => (
@@ -46,9 +43,8 @@ export function DemoAccess({ state, onEnter, onBack }: { state: AppState; onEnte
           ))}
         </ul>
         <div className="guest-row">
-          <span>Short on time?</span>
           <button className="btn btn-quiet" onClick={() => onEnter("alex")}>
-            Guest demo as Alex Morgan
+            Continue as guest (Alex Morgan)
           </button>
         </div>
       </main>

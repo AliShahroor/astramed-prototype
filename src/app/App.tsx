@@ -11,14 +11,19 @@ export default function App() {
   const { state, setState } = mission;
   const { route, go } = useRoute();
 
+  // The environment context tints the interface (accent and surfaces only; status colours never change).
+  useEffect(() => {
+    document.documentElement.dataset.env = state.environmentId;
+  }, [state.environmentId]);
+
   // A direct link into the workspace must never be blocked: open it as the default guest profile.
   useEffect(() => {
     if (route.kind === "app" && !state.session.entered)
       setState((s) => ({ ...s, session: { ...s.session, entered: true } }));
   }, [route, state.session.entered, setState]);
 
-  const enter = (astronautId: string) => {
-    const briefed = state.session.briefed.includes(astronautId);
+  const enter = (astronautId: string, skipBriefing = false) => {
+    const briefed = skipBriefing || state.session.briefed.includes(astronautId);
     setState((s) => ({ ...s, astronautId, session: { ...s.session, entered: true } }));
     go(briefed ? { kind: "app", page: "health" } : { kind: "entry", screen: "briefing" });
   };
@@ -53,6 +58,7 @@ export default function App() {
       <Welcome
         state={state}
         onEnter={() => go({ kind: "entry", screen: "access" })}
+        onQuick={() => enter("alex", true)}
         onContinue={() => go({ kind: "app", page: "health" })}
       />
     );

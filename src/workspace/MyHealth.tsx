@@ -1,9 +1,16 @@
-import { ArrowDownRight, ArrowRight, ArrowUpRight, BookOpen, Minus, Plus, Target } from "lucide-react";
+import { ArrowRight, BookOpen, Plus, Target } from "lucide-react";
 import { hazardContext, hazards, metricFor, metrics } from "../data/catalog";
 import { evidenceFor } from "../data/evidence";
 import { dayTimestamp, doseUtilization, selectSeries } from "../engine/monitoring";
 import { TrendChart } from "../components/TrendChart";
-import type { Finding, Hazard } from "../types";
+import type { Finding, Hazard, Indicator } from "../types";
+
+const GROUPS: { label: string; ids: Indicator[] }[] = [
+  { label: "Cognitive and sleep", ids: ["reaction", "sleep"] },
+  { label: "Cardiovascular", ids: ["heart", "systolic", "oxygen"] },
+  { label: "Musculoskeletal and activity", ids: ["activity", "strength"] },
+  { label: "Cabin and exposure", ids: ["co2", "radiation"] },
+];
 import { StatusTag, useWs } from "./context";
 
 export function formatValue(f: Finding) {
@@ -48,50 +55,44 @@ export function MyHealth() {
 
   return (
     <>
-      <div className="page-head">
+      <section className="status-bar" aria-labelledby="status-h">
         <div>
-          <h1 className="h1">My Health</h1>
-          <p className="page-sub">
-            {astronaut.name} · {astronaut.role} · {environment.name} · record of {dayTimestamp(state.day).slice(0, 10)} (simulated clock)
+          <h2 id="status-h" className="sr-only">Monitoring status</h2>
+          <p className="status-line">{summary}</p>
+          <p className="muted small">
+            Personal comparisons over the last {range === 94 ? "full mission" : `${range} days`} · record of {dayTimestamp(state.day).slice(0, 10)} (simulated clock) · {environment.name}
+            {insufficient > 0 && ` · ${insufficient} ${insufficient === 1 ? "indicator" : "indicators"} without enough data`}
           </p>
         </div>
         <button className="btn btn-secondary" onClick={() => open({ type: "log" })}>
           <Plus size={16} aria-hidden="true" /> Log reading
         </button>
-      </div>
+      </section>
 
-      <section className="overview" aria-labelledby="status-h">
-        <div className="overview-status">
-          <h2 id="status-h" className="h2">Current status</h2>
-          <p className="status-line">{summary}</p>
-          <p className="muted small">
-            Compared with your own preflight baseline over the last {range === 94 ? "full mission" : `${range} days`}. This is not a health score.
-            {insufficient > 0 && ` ${insufficient} ${insufficient === 1 ? "indicator has" : "indicators have"} insufficient data for this day.`}
-          </p>
-        </div>
-        <dl className="vitals" aria-label="Key measurements">
-          {(["reaction", "sleep", "heart"] as const).map((id) => {
-            const f = findings.find((x) => x.indicator === id)!;
-            const m = metricFor(id);
-            const up = (f.change ?? 0) > 0.05, down = (f.change ?? 0) < -0.05;
-            return (
-              <div key={id} className="vital">
-                <dt>
-                  <button className="link-plain" onClick={() => { setHazard("All hazards"); setIndicator(id); document.getElementById("trends")?.scrollIntoView({ behavior: "smooth" }); }}>
-                    {m.short}
-                  </button>
-                </dt>
-                <dd>
-                  <span className="vital-value">{f.current ? f.current.value.toFixed(m.decimals) : "—"}<span className="unit"> {m.unit}</span></span>
-                  <span className={`vital-delta ${f.status === "Review" ? "warn" : ""}`}>
-                    {up ? <ArrowUpRight size={14} aria-hidden="true" /> : down ? <ArrowDownRight size={14} aria-hidden="true" /> : <Minus size={14} aria-hidden="true" />}
-                    {f.change === null ? "no baseline" : `${Math.abs(f.change).toFixed(1)}% ${up ? "above" : down ? "below" : "from"} ${f.baseline} ${m.unit}`}
-                  </span>
-                </dd>
-              </div>
-            );
-          })}
-        </dl>
+      <section className="readings" aria-label="Latest measurements">
+        {GROUPS.map((g) => (
+          <div key={g.label} className="reading-group">
+            <h2 className="list-label">{g.label}</h2>
+            <dl>
+              {g.ids.map((id) => {
+                const f = findings.find((x) => x.indicator === id)!;
+                const m = metricFor(id);
+                const flagged = f.status === "Review" || f.status === "Alert";
+                return (
+                  <div key={id} className={flagged ? "reading flagged" : "reading"}>
+                    <dt>
+                      <button className="link-plain" onClick={() => { setHazard("All hazards"); setIndicator(id); document.getElementById("trends")?.scrollIntoView({ behavior: "smooth" }); }}>{m.short}</button>
+                    </dt>
+                    <dd>
+                      <span className="reading-value">{f.current ? f.current.value.toFixed(m.decimals) : "—"}<span className="unit"> {m.unit}</span></span>
+                      <span className={`reading-delta ${f.status === "Alert" ? "alert" : flagged ? "warn" : ""}`}>{changeText(f)}</span>
+                    </dd>
+                  </div>
+                );
+              })}
+            </dl>
+          </div>
+        ))}
       </section>
 
       {primary ? (

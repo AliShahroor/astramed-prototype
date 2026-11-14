@@ -137,8 +137,15 @@ export interface CrewNotification {
   findingId: string;
   title: string;
   acknowledged: boolean;
+  acknowledgedAt?: string;
   timestamp: string;
+  /** policy = raised by the notification policy; request = a crewmate asked for a check-in */
+  kind?: "policy" | "request";
+  requestedBy?: string;
 }
+export type TrainingVideo =
+  | { kind: "youtube"; id: string; title: string; credit: string; duration: string; captions: string; shows: string; page: string }
+  | { kind: "mp4"; src: string; track?: string; crossOrigin: boolean; title: string; credit: string; duration: string; captions: string; shows: string; page: string; size: string };
 export interface Activity {
   id: string;
   title: string;
@@ -146,12 +153,28 @@ export interface Activity {
   duration: string;
   description: string;
   steps: string[];
+  equipment?: string;
+  purpose?: string;
+  instructions?: string[];
+  evidenceId?: string;
+  video?: TrainingVideo;
 }
 export interface Completion {
   astronautId: string;
   activityId: string;
   day: number;
   scenario: Scenario;
+  timestamp: string;
+  /** session = an exercise session the astronaut recorded; checklist = demonstration checklist finished */
+  kind?: "session" | "checklist";
+  minutes?: number;
+  note?: string;
+}
+export interface VideoView {
+  astronautId: string;
+  activityId: string;
+  scenario: Scenario;
+  day: number;
   timestamp: string;
 }
 export interface AppState {
@@ -166,6 +189,9 @@ export interface AppState {
   checkins: Record<string, string>;
   voice: boolean;
   session: Session;
+  videoViews: VideoView[];
+  /** checked demonstration-checklist steps, keyed scenario-astronaut-activity-day */
+  checklists: Record<string, number[]>;
 }
 export interface Session {
   /** a demo profile has been chosen at least once */
