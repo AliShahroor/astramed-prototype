@@ -217,14 +217,13 @@ function Cognitive() {
     <section aria-labelledby="cog-h">
       <div className="section-head"><h2 id="cog-h" className="h2">Cognitive assessments</h2><button className="btn btn-link sm" onClick={() => setActive("RT")}>Reaction time only</button></div>
       <p className="muted measure">
-        Five short cognitive tasks, plus a simple reaction-time test. Digit-Symbol Substitution, Fractal 2-Back and Visual Object Learning re-create the
-        NASA Cognition battery tasks (NASA/TM-20205008023); Mathematical Processing and the delayed code-substitution recall follow the WinSCAT subtests.
-        These are Code Blue browser re-creations with no normative data, not validated. Each result is compared only with your own first {BASELINE_SESSIONS} sessions.{" "}
+        Five short cognitive tasks plus a reaction-time test, re-creating NASA Cognition-battery and WinSCAT subtests. They are Code Blue browser re-creations only: not validated, with no normative data. Each result is compared with your own first {BASELINE_SESSIONS} sessions.{" "}
         <button className="btn btn-link inline" onClick={() => openEvidence("cognition")}>About the Cognition battery</button> ·{" "}
         <button className="btn btn-link inline" onClick={() => openEvidence("winscat")}>WinSCAT</button>
       </p>
       <div className="test-grid" aria-label="Cognitive tests">
         <button className="test-card" onClick={() => setActive("RT")}>
+          <span className={`test-card-dot ${mine.length ? "ok" : "idle"}`} aria-hidden="true" />
           <span className="test-card-code">RT</span>
           <span className="test-card-head"><span className="test-card-name">Simple reaction time</span></span>
           <span className="test-card-measure">Psychomotor speed</span>
@@ -239,16 +238,25 @@ function Cognitive() {
           const scored = SCORED_TESTS.includes(t);
           const locked = t === "CDD" && !dsstToday;
           const delta = r?.throughput != null && b.throughput ? ((r.throughput - b.throughput) / b.throughput) * 100 : null;
+          const status = locked || !r ? "idle" : !scored ? "ok" : !b.ready ? "accent" : delta !== null && delta <= -10 ? "warn" : "ok";
           return (
             <button key={t} className="test-card" disabled={locked} title={locked ? "Run the Digit-Symbol task first today" : undefined} onClick={() => setActive(t)}>
+              <span className={`test-card-dot ${status}`} aria-hidden="true" />
               <span className="test-card-code">{t}</span>
               <span className="test-card-head"><span className="test-card-name">{TESTS[t].name}</span></span>
               <span className="test-card-measure">{TESTS[t].domain}</span>
               <span className="test-card-foot">
                 <span className="test-card-result">{r ? `${r.accuracy.toFixed(0)}% correct` : locked ? "Needs DSST today" : "Not run"}</span>
-                <span className={`test-card-base${delta !== null && delta <= -10 ? " warn-text" : ""}`}>
-                  {!scored ? "Learning step, not compared" : b.ready ? `Baseline ${b.throughput!.toFixed(1)}/min${delta !== null ? ` · ${delta >= 0 ? "+" : ""}${delta.toFixed(0)}%` : ""}` : `Building: ${b.sessions} of ${BASELINE_SESSIONS}`}
-                </span>
+                {!scored ? (
+                  <span className="test-card-base">Learning step, not compared</span>
+                ) : b.ready ? (
+                  <span className={`test-card-base${delta !== null && delta <= -10 ? " warn-text" : ""}`}>Baseline {b.throughput!.toFixed(1)}/min{delta !== null ? ` · ${delta >= 0 ? "+" : ""}${delta.toFixed(0)}%` : ""}</span>
+                ) : (
+                  <span className="test-card-progress" aria-label={`Baseline ${b.sessions} of ${BASELINE_SESSIONS} sessions`}>
+                    {Array.from({ length: BASELINE_SESSIONS }).map((_, k) => <i key={k} className={k < b.sessions ? "on" : ""} />)}
+                    <small>{b.sessions}/{BASELINE_SESSIONS}</small>
+                  </span>
+                )}
               </span>
             </button>
           );
