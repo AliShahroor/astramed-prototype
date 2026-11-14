@@ -17,13 +17,17 @@ export function parseHash(hash: string): Route {
     return {
       kind: "app",
       page: a as Page,
-      tab: a === "countermeasures" && TABS.includes(b as CounterTab) ? (b as CounterTab) : undefined,
+      tab:
+        a === "countermeasures" && TABS.includes(b as CounterTab)
+          ? (b as CounterTab)
+          : undefined,
     };
   return { kind: "entry", screen: "welcome" };
 }
 
 export function toHash(r: Route): string {
-  if (r.kind === "entry") return r.screen === "welcome" ? "#/" : `#/${r.screen}`;
+  if (r.kind === "entry")
+    return r.screen === "welcome" ? "#/" : `#/${r.screen}`;
   return r.tab ? `#/${r.page}/${r.tab}` : `#/${r.page}`;
 }
 

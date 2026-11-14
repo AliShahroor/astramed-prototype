@@ -19,7 +19,6 @@ export function Assessment({
   const [trials, setTrials] = useState<number[]>([]);
   const [falseStarts, setFalseStarts] = useState(0);
   const [misses, setMisses] = useState(0);
-  const [anticipatory, setAnticipatory] = useState(0);
   const [message, setMessage] = useState("");
   const [saved, setSaved] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -37,13 +36,12 @@ export function Assessment({
   }, []);
   useEffect(() => () => clear(), [clear]);
   const invalid = useCallback(
-    (text: string, kind: "early" | "miss" | "anticipatory" = "early") => {
+    (text: string, miss = false) => {
       clear();
       responseLock.current = true;
       setMessage(text);
       setStage("feedback");
-      if (kind === "miss") setMisses((n) => n + 1);
-      else if (kind === "anticipatory") setAnticipatory((n) => n + 1);
+      if (miss) setMisses((n) => n + 1);
       else setFalseStarts((n) => n + 1);
     },
     [clear],
@@ -53,7 +51,7 @@ export function Assessment({
       if (document.hidden && (stage === "waiting" || stage === "ready"))
         invalid(
           "Trial discarded: tab lost visibility. Repeat this trial.",
-          "miss",
+          true,
         );
     };
     document.addEventListener("visibilitychange", visibility);
@@ -73,7 +71,7 @@ export function Assessment({
           setStage("ready");
           timer.current = setTimeout(
             () =>
-              invalid("No response within 3 seconds. Trial excluded.", "miss"),
+              invalid("No response within 3 seconds. Trial excluded.", true),
             3000,
           );
         });
@@ -91,10 +89,10 @@ export function Assessment({
     responseLock.current = true;
     clear();
     const elapsed = performance.now() - onset.current;
-    if (elapsed < 100) {
+    if (elapsed < 100 || elapsed > 3000) {
       invalid(
-        "Under 100 ms: too fast to be a response to the signal (anticipation). Trial excluded.",
-        "anticipatory",
+        "Response outside the 100–3000 ms data-quality window. Trial excluded.",
+        true,
       );
       return;
     }
@@ -117,6 +115,9 @@ export function Assessment({
       : percentageChange(result, astronaut.baseline.reaction.value);
   return (
     <div className="assessment">
+      <p className="assessment-protocol">
+        One practice response · Five recorded trials · Median latency
+      </p>
       <p>
         Respond when the target turns teal and says “Respond now”. Use the
         target button or Space / Enter while it is focused. First, one practice
@@ -135,17 +136,17 @@ export function Assessment({
         </button>
       ) : stage === "result" ? (
         <div className="assessment-result">
-          <span className="label">
+          <span className="eyebrow">
             Assessment complete · {astronaut.name}
           </span>
           <h3>{result?.toFixed(0)} ms median latency</h3>
           <p>
-            {change !== null && change > 0 ? "+" : ""}{change?.toFixed(1)}% compared with{" "}
+            {change?.toFixed(1)}% compared with{" "}
             {astronaut.baseline.reaction.value} ms preflight baseline.
           </p>
           <p className="muted">
-            5 valid trials · {falseStarts} early · {anticipatory} anticipatory ·{" "}
-            {misses} missed or discarded
+            5 valid trials · {falseStarts} false starts · {misses} discarded /
+            missed trials
           </p>
           <p className="muted">
             Responses: {trials.map((t) => Math.round(t)).join(", ")} ms
@@ -164,7 +165,6 @@ export function Assessment({
                 trials: trials.map((t) => Math.round(t)),
                 falseStarts,
                 misses,
-                anticipatory,
                 median: result,
               });
               setSaved(true);
@@ -188,7 +188,7 @@ export function Assessment({
                 : `Recorded trial ${trials.length + 1} of 5`}
             </span>
             <span>
-              {falseStarts + anticipatory + misses} excluded so far
+              {falseStarts} false starts · {misses} excluded
             </span>
           </div>
           <button
@@ -226,7 +226,6 @@ export function Assessment({
                   setPractice(false);
                   setFalseStarts(0);
                   setMisses(0);
-                  setAnticipatory(0);
                 }
                 begin();
               }}
@@ -241,7 +240,7 @@ export function Assessment({
       )}
       {stage !== "instructions" && stage !== "result" && (
         <button
-          className="btn btn-link sm"
+          className="btn btn-link"
           onClick={() => {
             clear();
             setStage("instructions");
@@ -249,7 +248,6 @@ export function Assessment({
             setPractice(true);
             setFalseStarts(0);
             setMisses(0);
-            setAnticipatory(0);
           }}
         >
           <RotateCcw size={14} />

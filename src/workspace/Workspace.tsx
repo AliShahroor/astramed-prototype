@@ -1,210 +1,387 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Bell, Check, ChevronDown, ChevronLeft, ChevronRight, LogOut, Map, RefreshCw, Settings, UserRound, X } from "lucide-react";
+import {
+  Bell,
+  BookOpen,
+  Check,
+  ChevronDown,
+  LogOut,
+  Map,
+  Settings,
+  UserRound,
+  X,
+} from "lucide-react";
 import type { Route } from "../app/route";
 import type { useMission } from "../app/useMission";
-import { initialState } from "../app/useMission";
-import { astronauts, environments, metrics, scenarios } from "../data/catalog";
+import { astronauts, environments } from "../data/catalog";
 import { evaluateAll } from "../engine/monitoring";
-import type { Finding, Hazard, Indicator, Scenario } from "../types";
+import type { Finding, Hazard, Indicator } from "../types";
 import { Wordmark } from "../screens/brand";
 import { WsContext, useWs, type Modal, type Ws } from "./context";
 import { MyHealth } from "./MyHealth";
 import { Crew } from "./Crew";
 import { Countermeasures } from "./Countermeasures";
 import { Modals } from "./Modals";
+import { visibleNotifications } from "./crewOperations";
 
-export function Workspace({ mission, route, go }: { mission: ReturnType<typeof useMission>; route: Extract<Route, { kind: "app" }>; go: (r: Route) => void }) {
+export function Workspace({
+  mission,
+  route,
+  go,
+}: {
+  mission: ReturnType<typeof useMission>;
+  route: Extract<Route, { kind: "app" }>;
+  go: (r: Route) => void;
+}) {
   const { state, setState, rows } = mission;
   const [range, setRange] = useState(14);
   const [indicator, setIndicator] = useState<Indicator>("reaction");
   const [hazard, setHazard] = useState<Hazard>("All hazards");
   const [modal, setModal] = useState<Modal>(null);
   const [toast, setToast] = useState("");
+  const [offline, setOffline] = useState(!navigator.onLine);
+  const [cached, setCached] = useState(false);
   const astronaut = astronauts.find((a) => a.id === state.astronautId)!;
   const environment = environments.find((e) => e.id === state.environmentId)!;
-  const findings = useMemo(() => evaluateAll(astronaut, rows, state.scenario, state.day, range), [astronaut, rows, state.scenario, state.day, range]);
-  const pending = state.notifications.filter((n) => n.scenario === state.scenario && n.day <= state.day && !n.acknowledged);
-
+  const findings = useMemo(
+    () => evaluateAll(astronaut, rows, state.scenario, state.day, range),
+    [astronaut, rows, state.scenario, state.day, range],
+  );
+  const pending = visibleNotifications(state).filter((n) => !n.acknowledged);
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(""), 5000);
     return () => clearTimeout(t);
   }, [toast]);
-
-  const update = (patch: Partial<typeof state>) => setState((s) => ({ ...s, ...patch }));
+  useEffect(() => {
+    const on = () => setOffline(!navigator.onLine);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", on);
+    let active = true;
+    if ("serviceWorker" in navigator)
+      void navigator.serviceWorker.ready.then(() => {
+        if (active) setCached(true);
+      });
+    return () => {
+      active = false;
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", on);
+    };
+  }, []);
+  useEffect(() => {
+    document.getElementById("main")?.focus({ preventScroll: true });
+  }, [route.page]);
+  const update = (patch: Partial<typeof state>) =>
+    setState((s) => ({ ...s, ...patch }));
   const speak = (f: Finding) => {
-    if (!("speechSynthesis" in window)) return setToast("Speech synthesis is unavailable in this browser.");
+    if (!("speechSynthesis" in window))
+      return setToast("Speech synthesis is unavailable in this browser.");
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(`${f.status === "Nominal" ? "No flag" : f.status}. ${f.title}. ${f.summary} ${f.next}`);
+    const u = new SpeechSynthesisUtterance(
+      `${f.status === "Nominal" ? "No flag" : f.status}. ${f.title}. ${f.summary} ${f.next}`,
+    );
     u.rate = 0.95;
     speechSynthesis.speak(u);
   };
-  const reset = () => {
-    if ("speechSynthesis" in window) speechSynthesis.cancel();
-    setState((s) => ({ ...initialState(), session: s.session }));
-    setHazard("All hazards");
-    setIndicator("reaction");
-    setRange(14);
-    setModal(null);
-    go({ kind: "app", page: "health" });
-    setToast("Demo reset: Alex Morgan, scenario B, mission day 94. Logged records cleared.");
-  };
-
   const ws: Ws = {
-    mission, state, setState, update, astronaut, environment, findings, range, setRange,
-    indicator, setIndicator, hazard, setHazard, open: setModal, notify: setToast, speak, go,
-    page: route.page, tab: route.tab ?? "physical",
+    mission,
+    state,
+    setState,
+    update,
+    astronaut,
+    environment,
+    findings,
+    range,
+    setRange,
+    indicator,
+    setIndicator,
+    hazard,
+    setHazard,
+    open: setModal,
+    notify: setToast,
+    speak,
+    go,
+    page: route.page,
+    tab: route.tab ?? "physical",
   };
-
-  const NAV = [
-    { page: "health" as const, label: "My Health" },
-    { page: "crew" as const, label: "Crew" },
-    { page: "countermeasures" as const, label: "Countermeasures" },
+  const nav = [
+    { page: "health", label: "My Health", number: "01" },
+    { page: "crew", label: "Crew", number: "02" },
+    { page: "countermeasures", label: "Countermeasures", number: "03" },
   ];
-
   return (
     <WsContext.Provider value={ws}>
       <div className="app">
-        <a className="skip-link" href="#main" onClick={(e) => { e.preventDefault(); document.getElementById("main")?.focus(); }}>
+        <a
+          className="skip-link"
+          href="#main"
+          onClick={(e) => {
+            e.preventDefault();
+            document.getElementById("main")?.focus();
+          }}
+        >
           Skip to content
         </a>
-        <header className="appbar">
-          <div className="appbar-inner">
-            <a href="#/health" className="appbar-brand" aria-label="ASTRAMED, My Health">
-              <Wordmark compact />
-            </a>
-            <nav aria-label="Primary" className="appnav">
-              {NAV.map((n) => (
-                <a key={n.page} href={`#/${n.page}`} aria-current={route.page === n.page ? "page" : undefined} className="appnav-link">
-                  {n.label}
-                  {n.page === "crew" && pending.length > 0 && (
-                    <span className="count" aria-label={`${pending.length} pending`}>{pending.length}</span>
-                  )}
-                </a>
-              ))}
-            </nav>
+        <aside className="sidebar">
+          <a
+            href="#/health"
+            className="appbar-brand"
+            aria-label="ASTRAMED, My Health"
+          >
+            <Wordmark compact />
+            <span className="brand-subtitle">Crew health systems</span>
+          </a>
+          <nav aria-label="Primary" className="appnav">
+            {nav.map((n) => (
+              <a
+                key={n.page}
+                href={`#/${n.page}`}
+                aria-current={route.page === n.page ? "page" : undefined}
+                className="appnav-link"
+              >
+                <span className="nav-number" aria-hidden="true">
+                  {n.number}
+                </span>
+                {n.label}
+                {n.page === "crew" && pending.length > 0 && (
+                  <span className="count">{pending.length}</span>
+                )}
+              </a>
+            ))}
+          </nav>
+          <div className="sidebar-mission">
+            <span className="eyebrow">Mission record</span>
+            <strong>Ares I</strong>
+            <span>
+              Day {state.day} · {environment.name}
+            </span>
+            <button
+              className="btn btn-link"
+              onClick={() => setModal({ type: "mission" })}
+            >
+              Mission details
+            </button>
+          </div>
+          <div className="sidebar-bottom">
+            <button
+              className="sidebar-action"
+              onClick={() => setModal({ type: "evidence", id: "measures" })}
+            >
+              <BookOpen size={16} aria-hidden="true" />
+              Evidence library
+            </button>
+            <button
+              className="sidebar-action"
+              onClick={() => setModal({ type: "settings" })}
+            >
+              <Settings size={16} aria-hidden="true" />
+              Demo &amp; preferences
+            </button>
+            <span className="connection">
+              <span className="dot" aria-hidden="true" />
+              {offline
+                ? "Offline · local records"
+                : cached
+                  ? "Offline cache ready"
+                  : "Preparing offline cache"}
+            </span>
+            <span className="team-label">Team Code Blue · Prototype</span>
+          </div>
+        </aside>
+        <div className="workspace">
+          <header className="appbar">
+            <span className="page-crumb">
+              Ares I <span aria-hidden="true">/</span>{" "}
+              {nav.find((n) => n.page === route.page)?.label}
+            </span>
             <div className="appbar-right">
-              <button className="mission-chip" onClick={() => setModal({ type: "mission" })} aria-label="Mission details">
-                <span className="mission-chip-name">Ares I</span>
-                <span className="mission-chip-day">Day {state.day}</span>
-              </button>
+              <span className="day-label">Day {state.day}</span>
               <label className="env-select">
                 <span className="sr-only">Environment</span>
-                <select aria-label="Environment" value={state.environmentId} onChange={(e) => { update({ environmentId: e.target.value }); setToast(`Context set to ${environments.find((x) => x.id === e.target.value)!.name}. Readings and reference limits are unchanged.`); }}>
+                <select
+                  aria-label="Environment"
+                  value={state.environmentId}
+                  onChange={(e) => {
+                    update({ environmentId: e.target.value });
+                    setToast(
+                      "Environment context updated. Readings and reference limits are unchanged.",
+                    );
+                  }}
+                >
                   {environments.map((e) => (
-                    <option key={e.id} value={e.id}>{e.name}</option>
+                    <option key={e.id} value={e.id}>
+                      {e.name}
+                    </option>
                   ))}
                 </select>
               </label>
-              <a href="#/crew" className="icon-btn" aria-label={`Crew notifications, ${pending.length} pending`}>
+              <button
+                onClick={() => {
+                  go({ kind: "app", page: "crew" });
+                  setTimeout(
+                    () => document.getElementById("notifications-h")?.focus(),
+                    0,
+                  );
+                }}
+                className="icon-btn"
+                aria-label={`Crew notifications, ${pending.length} pending`}
+              >
                 <Bell size={18} aria-hidden="true" />
-                {pending.length > 0 && <span className="ping" aria-hidden="true" />}
-              </a>
-              <ProfileMenu
-                onSwitch={(id) => { update({ astronautId: id }); setToast(`Now viewing as ${astronauts.find((a) => a.id === id)!.name}.`); }}
-                onBriefing={() => go({ kind: "entry", screen: "briefing" })}
-                onSettings={() => setModal({ type: "settings" })}
-                onWelcome={() => go({ kind: "entry", screen: "welcome" })}
-                onReset={reset}
-              />
+                {pending.length > 0 && (
+                  <span className="ping" aria-hidden="true" />
+                )}
+              </button>
+              <ProfileMenu />
             </div>
-          </div>
-        </header>
-        <div className="simbar" role="region" aria-label="Simulation controls">
-          <div className="simbar-inner">
-            <span className="sim-flag"><span className="dot" aria-hidden="true" />Simulated data</span>
-            <label className="sim-field">
-              Scenario
-              <select aria-label="Demo scenario" value={state.scenario} onChange={(e) => { update({ scenario: e.target.value as Scenario }); setToast("Scenario loaded. Findings and crew statuses were recalculated."); }}>
-                {Object.entries(scenarios).map(([k, l]) => (
-                  <option key={k} value={k}>{l}</option>
-                ))}
-              </select>
-            </label>
-            <div className="sim-field day-field">
-              <span aria-hidden="true">Mission day</span>
-              <button className="step" aria-label="Previous mission day" disabled={state.day <= 1} onClick={() => update({ day: state.day - 1 })}><ChevronLeft size={16} /></button>
-              <select aria-label="Mission day" value={state.day} onChange={(e) => update({ day: Number(e.target.value) })}>
-                {Array.from({ length: 94 }, (_, i) => 94 - i).map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
-              <button className="step" aria-label="Next mission day" disabled={state.day >= 94} onClick={() => update({ day: state.day + 1 })}><ChevronRight size={16} /></button>
-            </div>
-            <span className="sim-context">
-              {environment.name} · {environment.gravity} · {environment.delay}
-            </span>
-          </div>
+          </header>
+          {mission.storageError && (
+            <p className="banner error" role="alert">
+              Browser storage is unavailable or full. Changes stay in memory
+              until you close the tab.
+            </p>
+          )}
+          <main id="main" tabIndex={-1} className={`page page-${route.page}`}>
+            {route.page === "health" && <MyHealth />}
+            {route.page === "crew" && <Crew />}
+            {route.page === "countermeasures" && <Countermeasures />}
+          </main>
+          <footer className="appfoot">
+            <span>Synthetic mission data · Decision-support prototype</span>
+            <button
+              className="btn btn-link sm"
+              onClick={() => setModal({ type: "settings" })}
+            >
+              About this demonstration
+            </button>
+          </footer>
         </div>
-        {mission.storageError && (
-          <p className="banner error" role="alert">Browser storage is unavailable or full. Changes stay in memory until you close the tab.</p>
-        )}
-        <main id="main" tabIndex={-1} className="page">
-          {route.page === "health" && <MyHealth />}
-          {route.page === "crew" && <Crew />}
-          {route.page === "countermeasures" && <Countermeasures />}
-        </main>
-        <footer className="appfoot">
-          <span>Synthetic crew and measurements · Decision-support prototype · Not a medical device</span>
-          <span>Team Code Blue · {metrics.length} indicators · rules v1.0.0</span>
-        </footer>
         <Modals modal={modal} close={() => setModal(null)} />
         {toast && (
           <div className="toast" role="status">
             <Check size={16} aria-hidden="true" />
             <span>{toast}</span>
-            <button className="icon-btn sm" onClick={() => setToast("")} aria-label="Dismiss message"><X size={14} /></button>
+            <button
+              className="icon-btn sm"
+              onClick={() => setToast("")}
+              aria-label="Dismiss message"
+            >
+              <X size={16} />
+            </button>
           </div>
         )}
       </div>
     </WsContext.Provider>
   );
 }
-
-function ProfileMenu({ onSwitch, onBriefing, onSettings, onWelcome, onReset }: { onSwitch: (id: string) => void; onBriefing: () => void; onSettings: () => void; onWelcome: () => void; onReset: () => void }) {
-  const { astronaut } = useWs();
+function ProfileMenu() {
+  const { astronaut, setState, update, notify, go, open: showModal } = useWs();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!open) return;
-    const down = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
-    const key = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); buttonRef.current?.focus(); } };
+    const down = (e: MouseEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        buttonRef.current?.focus();
+      }
+    };
     document.addEventListener("mousedown", down);
     document.addEventListener("keydown", key);
-    return () => { document.removeEventListener("mousedown", down); document.removeEventListener("keydown", key); };
+    return () => {
+      document.removeEventListener("mousedown", down);
+      document.removeEventListener("keydown", key);
+    };
   }, [open]);
-  const act = (fn: () => void) => () => { setOpen(false); fn(); };
+  const act = (fn: () => void) => () => {
+    setOpen(false);
+    fn();
+  };
+  const signOut = () => {
+    if ("speechSynthesis" in window) speechSynthesis.cancel();
+    setState((s) => ({ ...s, session: { ...s.session, entered: false } }));
+    go({ kind: "entry", screen: "welcome" });
+  };
   return (
     <div className="profile-menu" ref={ref}>
-      <button ref={buttonRef} className="profile-btn" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen((o) => !o)} aria-label={`Profile: ${astronaut.name}`}>
-        <span className="avatar" aria-hidden="true">{astronaut.initials}</span>
+      <button
+        ref={buttonRef}
+        className="profile-btn"
+        aria-expanded={open}
+        aria-controls="profile-options"
+        onClick={() => setOpen((o) => !o)}
+        aria-label={`Profile: ${astronaut.name}`}
+      >
+        <span className="avatar" aria-hidden="true">
+          {astronaut.initials}
+        </span>
         <span className="profile-btn-text">
-          <span>{astronaut.name}</span>
+          {astronaut.name}
           <small>{astronaut.role}</small>
         </span>
         <ChevronDown size={15} aria-hidden="true" />
       </button>
       {open && (
-        <div className="menu" role="menu" aria-label="Profile and session">
-          <div className="menu-label">Switch astronaut</div>
+        <div
+          className="menu"
+          id="profile-options"
+          role="group"
+          aria-label="Profile and session"
+        >
+          <div className="menu-label">Switch profile</div>
           {astronauts.map((a) => (
-            <button key={a.id} role="menuitemradio" aria-checked={a.id === astronaut.id} className="menu-item" onClick={act(() => onSwitch(a.id))}>
-              <span className="avatar sm" aria-hidden="true">{a.initials}</span>
-              <span className="grow">{a.name}<small>{a.role}</small></span>
+            <button
+              key={a.id}
+              className="menu-item"
+              aria-pressed={a.id === astronaut.id}
+              onClick={act(() => {
+                update({ astronautId: a.id });
+                notify(`Viewing ${a.name}.`);
+              })}
+            >
+              <span className="avatar sm" aria-hidden="true">
+                {a.initials}
+              </span>
+              <span className="grow">
+                {a.name}
+                <small>{a.role}</small>
+              </span>
               {a.id === astronaut.id && <Check size={15} aria-hidden="true" />}
             </button>
           ))}
-          <div className="menu-sep" role="separator" />
-          <button role="menuitem" className="menu-item" onClick={act(onBriefing)}><Map size={16} aria-hidden="true" /><span className="grow">Mission briefing</span></button>
-          <button role="menuitem" className="menu-item" onClick={act(onSettings)}><Settings size={16} aria-hidden="true" /><span className="grow">Demo &amp; preferences</span></button>
-          <button role="menuitem" className="menu-item" onClick={act(onWelcome)}><LogOut size={16} aria-hidden="true" /><span className="grow">Return to welcome</span></button>
-          <button role="menuitem" className="menu-item danger" onClick={act(() => { if (confirm("Reset the demo? Logged readings, assessments, check-ins and progress will be cleared.")) onReset(); })}><RefreshCw size={16} aria-hidden="true" /><span className="grow">Reset demo</span></button>
-          <div className="menu-sep" role="separator" />
-          <p className="menu-note"><UserRound size={14} aria-hidden="true" /> Demo profiles, no authentication.</p>
+          <div className="menu-sep" />
+          <button
+            className="menu-item"
+            onClick={act(() => go({ kind: "entry", screen: "access" }))}
+          >
+            <UserRound size={16} />
+            Crew profile selection
+          </button>
+          <button
+            className="menu-item"
+            onClick={act(() => go({ kind: "entry", screen: "briefing" }))}
+          >
+            <Map size={16} />
+            Mission briefing
+          </button>
+          <button
+            className="menu-item"
+            onClick={act(() => showModal({ type: "settings" }))}
+          >
+            <Settings size={16} />
+            Demo &amp; preferences
+          </button>
+          <button className="menu-item" onClick={act(signOut)}>
+            <LogOut size={16} />
+            Sign out of demo
+          </button>
+          <p className="menu-note">
+            Simulated access · saved records are retained
+          </p>
         </div>
       )}
     </div>
   );
 }
-

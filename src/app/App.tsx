@@ -19,8 +19,16 @@ export default function App() {
 
   const enter = (astronautId: string) => {
     const briefed = state.session.briefed.includes(astronautId);
-    setState((s) => ({ ...s, astronautId, session: { ...s.session, entered: true } }));
-    go(briefed ? { kind: "app", page: "health" } : { kind: "entry", screen: "briefing" });
+    setState((s) => ({
+      ...s,
+      astronautId,
+      session: { ...s.session, entered: true },
+    }));
+    go(
+      briefed
+        ? { kind: "app", page: "health" }
+        : { kind: "entry", screen: "briefing" },
+    );
   };
 
   const finishBriefing = (remember: boolean) => {
@@ -39,12 +47,21 @@ export default function App() {
 
   if (route.kind === "entry") {
     if (route.screen === "access")
-      return <DemoAccess state={state} onEnter={enter} onBack={() => go({ kind: "entry", screen: "welcome" })} />;
+      return (
+        <DemoAccess
+          onSkip={() => go({ kind: "app", page: "health" })}
+          state={state}
+          onEnter={enter}
+          onBack={() => go({ kind: "entry", screen: "welcome" })}
+        />
+      );
     if (route.screen === "briefing")
       return (
         <Briefing
           state={state}
-          onEnvironment={(environmentId) => setState((s) => ({ ...s, environmentId }))}
+          onEnvironment={(environmentId) =>
+            setState((s) => ({ ...s, environmentId }))
+          }
           onContinue={finishBriefing}
           onSwitch={() => go({ kind: "entry", screen: "access" })}
         />

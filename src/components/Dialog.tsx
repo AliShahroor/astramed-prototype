@@ -13,17 +13,27 @@ export function Dialog({
   wide?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  const opener = useRef(document.activeElement as HTMLElement | null);
   useEffect(() => {
     const d = ref.current;
     d?.showModal();
-    return () => d?.close();
+    const previous = opener.current;
+    return () => {
+      d?.close();
+      queueMicrotask(() => {
+        if (previous?.isConnected) previous.focus({ preventScroll: true });
+      });
+    };
   }, []);
   return (
     <dialog
       ref={ref}
       className={wide ? "dialog wide" : "dialog"}
       aria-label={title}
-      onCancel={onClose}
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

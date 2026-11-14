@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { astronauts, mission } from "../data/catalog";
-import { dayTimestamp, evaluateAll, generateHistory } from "../engine/monitoring";
+import { evaluateAll, generateHistory } from "../engine/monitoring";
 import type { AppState, CrewNotification } from "../types";
-export const STORAGE_KEY = "astramed-state-v2";
+export const STORAGE_KEY = "astramed-state-v1";
 /** Crew-level status always uses the same fixed window so every viewer sees the same result. */
 export const CREW_WINDOW_DAYS = 14;
 /** Shared cabin readings are not attributed to any person. */
@@ -19,34 +19,57 @@ export function initialState(): AppState {
     notifications: [],
     checkins: {},
     voice: false,
+    checkinRequests: {},
     session: { entered: false, briefed: [] },
+  };
+}
+/** Normalize older saved sessions without discarding readings or acknowledgements. */
+export function restoreState(raw: unknown): AppState {
+  if (!raw || typeof raw !== "object") return initialState();
+  const s = raw as AppState;
+  if (
+    !astronauts.some((a) => a.id === s.astronautId) ||
+    !["nominal", "fatigue", "environment"].includes(s.scenario) ||
+    !Number.isInteger(s.day) ||
+    s.day < 1 ||
+    s.day > 94 ||
+    !["mars", "orbit", "moon", "earth"].includes(s.environmentId) ||
+    ![s.readings, s.assessments, s.completions, s.notifications].every(
+      Array.isArray,
+    ) ||
+    !s.checkins ||
+    typeof s.checkins !== "object" ||
+    typeof s.voice !== "boolean"
+  )
+    return initialState();
+  return {
+    ...s,
+    checkinRequests: s.checkinRequests ?? {},
+    session: {
+      entered: s.session?.entered ?? false,
+      briefed: Array.isArray(s.session?.briefed)
+        ? s.session.briefed.filter((id) => astronauts.some((a) => a.id === id))
+        : [],
+    },
+    notifications: s.notifications.map((n) => ({
+      ...n,
+      astronautId: n.findingId?.includes("co2") ? CABIN_ID : n.astronautId,
+      id: `${n.scenario}-${n.findingId?.includes("co2") ? CABIN_ID : n.astronautId}-${n.findingId?.split("-").at(-1)}`,
+    })),
   };
 }
 function readState(): AppState {
   try {
-    const s = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-    if (
-      s &&
-      astronauts.some((a) => a.id === s.astronautId) &&
-      ["nominal", "fatigue", "environment"].includes(s.scenario) &&
-      Number.isInteger(s.day) &&
-      s.day >= 1 &&
-      s.day <= 94 &&
-      ["mars", "orbit", "moon", "earth"].includes(s.environmentId) &&
-      ["readings", "assessments", "completions", "notifications"].every((k) =>
-        Array.isArray(s[k]),
-      ) &&
-      s.checkins &&
-      typeof s.voice === "boolean" &&
-      s.session &&
-      typeof s.session.entered === "boolean" &&
-      Array.isArray(s.session.briefed)
-    )
-      return s;
+    return restoreState(
+      JSON.parse(
+        localStorage.getItem(STORAGE_KEY) ||
+          localStorage.getItem("astramed-state-v2") ||
+          "null",
+      ),
+    );
   } catch {
-    /* Invalid storage falls back to a reproducible demo. */
+    return initialState();
   }
-  return initialState();
 }
 export function useMission() {
   const [state, setState] = useState<AppState>(readState);
@@ -77,7 +100,7 @@ export function useMission() {
     [rows, state.scenario, state.day],
   );
   // Notification history: one entry per person (or the cabin) / rule / scenario, created the first
-  // time a finding meets the notification policy. Timestamps use the simulated mission clock.
+  // time a finding meets the notification policy. Keep the real recording timestamp and simulated day.
   useEffect(() => {
     const proposed: CrewNotification[] = [];
     for (const a of astronauts)
@@ -100,7 +123,7 @@ export function useMission() {
               ? "Career dose reference reached"
               : "Check-in requested by monitoring policy",
           acknowledged: false,
-          timestamp: dayTimestamp(state.day, 9),
+          timestamp: new Date().toISOString(),
         });
       }
     setState((prev) => {

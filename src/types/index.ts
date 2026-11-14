@@ -137,6 +137,9 @@ export interface CrewNotification {
   findingId: string;
   title: string;
   acknowledged: boolean;
+  acknowledgedAt?: string;
+  acknowledgedDay?: number;
+  dismissedAt?: string;
   timestamp: string;
 }
 export interface Activity {
@@ -165,6 +168,7 @@ export interface AppState {
   notifications: CrewNotification[];
   checkins: Record<string, string>;
   voice: boolean;
+  checkinRequests: Record<string, "routine" | "check-in" | "support">;
   session: Session;
 }
 export interface Session {

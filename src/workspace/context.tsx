@@ -2,7 +2,16 @@ import { createContext, useContext } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import type { CounterTab, Page, Route } from "../app/route";
 import type { useMission } from "../app/useMission";
-import type { Activity, AppState, Astronaut, Environment, Finding, Hazard, Indicator, Status } from "../types";
+import type {
+  Activity,
+  AppState,
+  Astronaut,
+  Environment,
+  Finding,
+  Hazard,
+  Indicator,
+  Status,
+} from "../types";
 
 export type Modal =
   | { type: "finding"; indicator: Indicator }
@@ -48,7 +57,13 @@ const LABEL: Record<Status, string> = {
   Alert: "Alert",
   "Insufficient data": "Insufficient data",
 };
-export function StatusTag({ status, plain = false }: { status: Status; plain?: boolean }) {
+export function StatusTag({
+  status,
+  plain = false,
+}: {
+  status: Status;
+  plain?: boolean;
+}) {
   const cls = status.toLowerCase().replace(" ", "-");
   return (
     <span className={`status ${cls}${plain ? " plain" : ""}`}>

@@ -26,18 +26,26 @@ export function Briefing({
       </header>
       <main id="main" className="entry-main narrow">
         <p className="kicker">
-          Signed in for the demo as <strong>{a.name}</strong> · {a.role}{" "}
+          Selected profile: <strong>{a.name}</strong> · {a.role}{" "}
           <button className="btn btn-link inline" onClick={onSwitch}>
             Change
           </button>
         </p>
-        <h1 className="h1">{mission.name}: mission day {state.day}</h1>
-        <p className="lede">A short orientation before your health view. You will not see this again for this profile unless you open it from the profile menu.</p>
+        <h1 className="h1">
+          {mission.name}: mission day {state.day}
+        </h1>
+        <p className="lede">
+          Review the mission context and available functions before opening the
+          workspace.
+        </p>
 
         <dl className="brief-grid">
           <div>
             <dt>Mission</dt>
-            <dd>{mission.name}, a fictional long-duration Mars transit with four crew</dd>
+            <dd>
+              {mission.name}, a fictional long-duration Mars transit with four
+              crew
+            </dd>
           </div>
           <div>
             <dt>Mission day</dt>
@@ -46,14 +54,22 @@ export function Briefing({
           <div>
             <dt>Environment context</dt>
             <dd>
-              <select aria-label="Environment" className="field" value={state.environmentId} onChange={(e) => onEnvironment(e.target.value)}>
+              <select
+                aria-label="Environment"
+                className="field"
+                value={state.environmentId}
+                onChange={(e) => onEnvironment(e.target.value)}
+              >
                 {environments.map((e) => (
                   <option key={e.id} value={e.id}>
                     {e.name}
                   </option>
                 ))}
               </select>
-              <span className="sub">{env.gravity}. Changes context only; reference limits stay the same.</span>
+              <span className="sub">
+                {env.gravity}. Changes context only; reference limits stay the
+                same.
+              </span>
             </dd>
           </div>
           <div>
@@ -68,24 +84,42 @@ export function Briefing({
 
         <h2 className="h2">What ASTRAMED monitors</h2>
         <ul className="brief-list">
-          <li>Sleep, reaction time, heart rate, blood pressure, oxygen saturation, activity and strength, each compared with your own preflight baseline.</li>
-          <li>Cabin CO₂ against the NASA-STD-3001 one-hour average reference, and career radiation dose against the NASA career reference.</li>
-          <li>A short on-board reaction-time assessment whose result feeds straight back into your findings.</li>
+          <li>
+            Sleep, reaction time, heart rate, blood pressure, oxygen saturation,
+            activity and strength, each compared with your own preflight
+            baseline.
+          </li>
+          <li>
+            Cabin CO₂ against the NASA-STD-3001 one-hour average reference, and
+            career radiation dose against the NASA career reference.
+          </li>
+          <li>
+            A short browser reaction-time assessment whose result feeds straight
+            back into your findings.
+          </li>
           <li>Crew check-ins that share a status, never your measurements.</li>
         </ul>
 
         <p className="notice-block">
-          <strong>Simulated data.</strong> Every measurement here is synthetic, generated reproducibly for this demonstration.
-          Code Blue’s alert rules are illustrative and not clinically validated. ASTRAMED does not diagnose or replace a
-          flight surgeon.
+          <strong>Simulated data.</strong> Seeded measurements are synthetic;
+          manual entries and browser assessments are saved separately. Code
+          Blue’s alert rules are illustrative and not clinically validated.
+          ASTRAMED does not diagnose or replace a flight surgeon.
         </p>
 
         <div className="brief-actions">
-          <button className="btn btn-primary btn-lg" onClick={() => onContinue(remember)}>
-            Continue to My Health <ArrowRight size={18} aria-hidden="true" />
+          <button
+            className="btn btn-primary btn-lg"
+            onClick={() => onContinue(remember)}
+          >
+            Open Workspace <ArrowRight size={18} aria-hidden="true" />
           </button>
           <label className="check">
-            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+            />
             Skip this briefing next time for {a.name.split(" ")[0]}
           </label>
         </div>

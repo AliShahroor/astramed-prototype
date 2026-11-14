@@ -1,72 +1,107 @@
-import { ArrowRight, BookOpen, Gauge, WifiOff } from "lucide-react";
-import { astronauts, mission } from "../data/catalog";
+import { ArrowRight } from "lucide-react";
+import { astronauts, environments } from "../data/catalog";
 import type { AppState } from "../types";
-import { Trajectory, Wordmark } from "./brand";
-
-export function Welcome({ state, onEnter, onContinue }: { state: AppState; onEnter: () => void; onContinue: () => void }) {
+import { Wordmark } from "./brand";
+export function Welcome({
+  state,
+  onEnter,
+  onContinue,
+}: {
+  state: AppState;
+  onEnter: () => void;
+  onContinue: () => void;
+}) {
   const current = astronauts.find((a) => a.id === state.astronautId)!;
   return (
     <div className="entry">
       <header className="entry-top">
         <Wordmark />
-        <span className="entry-meta">Team Code Blue · NASA Space Apps Challenge 2026 prototype</span>
+        <span className="entry-meta">
+          Team Code Blue · Mission systems prototype
+        </span>
       </header>
       <main id="main" className="entry-main welcome">
         <div className="welcome-copy">
+          <p className="eyebrow">Ares I / Crew health operations</p>
           <h1 className="welcome-title">
-            Your health. Your mission.
-            <br />
-            Informed decisions beyond Earth.
+            Astronaut Health
+            <br className="desktop-break" /> Monitoring System
           </h1>
           <p className="lede">
-            ASTRAMED compares each astronaut’s measurements with their own preflight baseline, explains every flag
-            step by step, and links it to the NASA evidence behind it. The analysis runs on board, without waiting
-            for Earth.
+            Review personal measurements, investigate monitoring findings and
+            coordinate crew check-ins from a single workspace.
           </p>
           <div className="welcome-actions">
             <button className="btn btn-primary btn-lg" onClick={onEnter}>
-              Enter Mission Demo <ArrowRight size={18} aria-hidden="true" />
+              Enter Mission System <ArrowRight size={18} aria-hidden="true" />
             </button>
-            {state.session.entered && (
-              <button className="btn btn-quiet btn-lg" onClick={onContinue}>
-                Continue as {current.name}
-              </button>
-            )}
+            <button className="btn btn-secondary btn-lg" onClick={onContinue}>
+              Quick Demo
+            </button>
           </div>
-          <ul className="capabilities">
-            <li>
-              <Gauge size={18} aria-hidden="true" />
-              <div>
-                <strong>Explainable findings</strong>
-                <span>Every flag shows the reading, the baseline, the change and the rule that fired.</span>
-              </div>
-            </li>
-            <li>
-              <BookOpen size={18} aria-hidden="true" />
-              <div>
-                <strong>NASA evidence, packaged locally</strong>
-                <span>Standards and research are cited by section, together with their limitations.</span>
-              </div>
-            </li>
-            <li>
-              <WifiOff size={18} aria-hidden="true" />
-              <div>
-                <strong>Local-first</strong>
-                <span>Analysis runs in the browser; the production build caches itself for offline use.</span>
-              </div>
-            </li>
-          </ul>
+          {state.session.entered && (
+            <button className="btn btn-link returning" onClick={onContinue}>
+              Continue as {current.name} <ArrowRight size={16} />
+            </button>
+          )}
+          <p className="welcome-notice">
+            Simulated crew access. No account or password required.
+          </p>
         </div>
-        <figure className="welcome-figure" aria-hidden="true">
-          <Trajectory day={state.day} />
-          <figcaption>
-            {mission.name} · fictional Mars transit · mission day {state.day}
-          </figcaption>
-        </figure>
+        <aside className="mission-dossier" aria-label="Mission summary">
+          <div className="dossier-heading">
+            <span className="eyebrow">Mission record</span>
+            <span className="sim-label">Demonstration</span>
+          </div>
+          <h2>Ares I</h2>
+          <p className="muted">Fictional long-duration exploration mission</p>
+          <dl className="dossier-facts">
+            <div>
+              <dt>Mission day</dt>
+              <dd>{String(state.day).padStart(3, "0")}</dd>
+            </div>
+            <div>
+              <dt>Crew</dt>
+              <dd>04</dd>
+            </div>
+            <div>
+              <dt>Environment</dt>
+              <dd>
+                {environments.find((e) => e.id === state.environmentId)?.name}
+              </dd>
+            </div>
+          </dl>
+          <ol className="capabilities">
+            <li>
+              <span>01</span>
+              <div>
+                <strong>Personal health</strong>
+                <p>Baseline comparisons and traceable evidence.</p>
+              </div>
+            </li>
+            <li>
+              <span>02</span>
+              <div>
+                <strong>Crew operations</strong>
+                <p>Shared status, notifications and check-ins.</p>
+              </div>
+            </li>
+            <li>
+              <span>03</span>
+              <div>
+                <strong>Countermeasures</strong>
+                <p>Activity records and reaction-time assessment.</p>
+              </div>
+            </li>
+          </ol>
+        </aside>
       </main>
       <footer className="entry-foot">
-        All crew and measurements are synthetic. ASTRAMED is an unvalidated prototype, not a medical device, and does
-        not replace a flight surgeon.
+        <span>
+          Synthetic data · Unvalidated decision-support prototype · Not a
+          medical device
+        </span>
+        <span>Local analysis · Offline after initial load</span>
       </footer>
     </div>
   );
