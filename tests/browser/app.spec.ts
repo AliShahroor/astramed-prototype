@@ -31,16 +31,16 @@ test("entry: welcome, profile selection, briefing, workspace; briefing skipped o
   await expect(page.getByText("About 1.3 s one-way")).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("data-env", "moon");
   await page.getByRole("button", { name: "Open Workspace" }).click();
-  await expect(title(page, "Personal Health Overview")).toBeVisible();
-  await expect(page.getByText("Mohammad Al-Ani · Commander", { exact: false }).first()).toBeVisible();
+  await expect(title(page, "Health Overview")).toBeVisible();
+  await expect(page.locator(".who-name")).toHaveText("Mohammad Al-Ani");
   await page.getByRole("button", { name: /Profile: Mohammad Al-Ani/ }).click();
   await page.getByRole("menuitem", { name: "Return to profile selection" }).click();
   await page.getByRole("button", { name: /Enter as Mohammad Al-Ani/ }).click();
-  await expect(title(page, "Personal Health Overview")).toBeVisible();
+  await expect(title(page, "Health Overview")).toBeVisible();
   await page.getByRole("button", { name: /Profile:/ }).click();
   await page.getByRole("menuitem", { name: "Sign out of demo session" }).click();
   await page.getByRole("button", { name: "Quick Demo" }).click();
-  await expect(page.getByText("Ali Shahroor · Mission specialist", { exact: false }).first()).toBeVisible();
+  await expect(page.locator(".who-name")).toHaveText("Ali Shahroor");
   expect(errors).toEqual([]);
 });
 
@@ -87,7 +87,7 @@ test("logging, persistence, profile switching, environment theme, hazards and da
   await expect(page.locator(".readings")).toContainText("270 ms");
   await page.getByRole("button", { name: /Profile: Ali Shahroor/ }).click();
   await page.getByRole("menuitemradio", { name: /Mohammad Al-Ani/ }).click();
-  await expect(page.getByText("Mohammad Al-Ani · Commander", { exact: false }).first()).toBeVisible();
+  await expect(page.locator(".who-name")).toHaveText("Mohammad Al-Ani");
   await page.getByRole("banner").getByLabel("Environment").selectOption("earth");
   await expect(page.locator("html")).toHaveAttribute("data-env", "earth");
   await expect(page.locator(".mission-panel")).toContainText("1 g");
@@ -234,31 +234,24 @@ test("real assessment: early trial excluded, five valid trials saved to health",
   await expect(page.getByRole("dialog")).toContainText("Browser assessment");
 });
 
-test("cognitive battery: CDD locked until CDS, MTH run and saved with throughput", async ({ page }) => {
+test("cognitive battery: CDD locked until DSST, MTH run and saved with baseline progress", async ({ page }) => {
   await page.goto("./#/countermeasures/cognitive");
-  const row = (t: string) => page.locator(`table.tests tbody tr:has(th .mono:text-is("${t}"))`);
-  await expect(row("CDD").getByRole("button", { name: "Start" })).toBeDisabled();
-  await row("MTH").getByRole("button", { name: "Start" }).click();
-  await page.getByRole("button", { name: "Skip practice" }).click();
-  for (let i = 0; i < 15; i++) {
-    await expect(page.getByRole("button", { name: /Less than 5/ })).toBeEnabled({ timeout: 4000 });
-    const text = await page.locator(".cog-math").innerText();
+  const card = (code: string) => page.locator(".test-card", { has: page.locator(".test-card-code", { hasText: new RegExp(`^${code}$`) }) });
+  await expect(card("CDD")).toBeDisabled();
+  await expect(card("CDD")).toContainText("Needs DSST today");
+  await card("MTH").click();
+  await page.getByRole("button", { name: "Start", exact: true }).click();
+  const problem = page.locator(".cog-math");
+  while (await problem.isVisible().catch(() => false)) {
+    const text = await problem.innerText();
     const v = Function(`return ${text.replace(/−/g, "-")}`)() as number;
     await page.keyboard.press(v < 5 ? "f" : "j");
+    await page.waitForTimeout(30);
   }
-  await expect(page.getByText("15 of 15 correct")).toBeVisible();
-  await page.getByRole("button", { name: "Save result" }).click();
-  await page.getByRole("button", { name: "All tests" }).click();
-  await expect(row("MTH")).toContainText("100% correct");
-  await expect(row("MTH")).toContainText("Building: 1 of 3");
-  await row("CDS").getByRole("button", { name: "Start" }).click();
-  await expect(page.getByLabel("Code key")).toBeHidden();
-  await page.getByRole("button", { name: "Skip practice" }).click();
-  await expect(page.getByLabel("Code key")).toBeVisible();
-  for (let i = 0; i < 18; i++) { await expect(page.getByRole("button", { name: /^Match/ })).toBeEnabled({ timeout: 4000 }); await page.keyboard.press("f"); }
-  await page.getByRole("button", { name: "Save result" }).click();
-  await page.getByRole("button", { name: "All tests" }).click();
-  await expect(row("CDD").getByRole("button", { name: "Start" })).toBeEnabled();
+  await expect(page.getByRole("heading", { name: /correct · 100%/ })).toBeVisible();
+  await page.getByRole("button", { name: "Save and finish" }).click();
+  await expect(card("MTH")).toContainText("100% correct");
+  await expect(card("MTH").getByLabel("Baseline 1 of 3 sessions")).toBeVisible();
 });
 
 test("crew detail opens as a slide-over sheet on phones", async ({ page }) => {
@@ -311,7 +304,7 @@ test("offline: workspace, evidence and assessment work; uncached video shows una
   await page.waitForFunction(() => !!navigator.serviceWorker.controller);
   await context.setOffline(true);
   await page.reload();
-  await expect(title(page, "Personal Health Overview")).toBeVisible();
+  await expect(title(page, "Health Overview")).toBeVisible();
   await scenario(page, "environment");
   await page.getByRole("button", { name: "Why was this flagged?" }).click();
   await page.getByRole("dialog").getByRole("button", { name: /OCHMO/ }).click();
