@@ -933,3 +933,16 @@ label.choice { text-align: center; padding: var(--s2) var(--s2); font-size: 14px
 .indicator-bottom { padding-right: 22px; }
 /* Keep looping clips at the same size as the exercise stage */
 .training-detail .video { max-width: 880px; }
+
+
+/* Simpler overview */
+.who-summary.clear { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 15px; font-weight: 500; color: var(--text); }
+.who-summary.clear svg { color: var(--ok); }
+.who-summary.clear .muted { font-weight: 400; font-size: 14px; }
+.finding-line { margin-top: var(--s2); color: var(--text-2); font-size: 15.5px; font-variant-numeric: tabular-nums; }
+.finding-line strong { font-size: 18px; font-weight: 600; }
+.trends .section-head { gap: var(--s3); flex-wrap: wrap; }
+.hazard-select { margin-left: auto; }
+.hazard-select .field.sm { height: 32px; padding: 0 var(--s3); font-size: 13.5px; }
+.indicator-list .indicator { padding-top: 10px; padding-bottom: 10px; }
+.hazard-select .field.sm { width: auto; min-width: 180px; }
