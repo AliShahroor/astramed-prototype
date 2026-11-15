@@ -19,10 +19,12 @@ function useOnline() {
  */
 export function VideoPlayer({ video, onWatched }: { video: TrainingVideo; onWatched: () => void }) {
   const online = useOnline();
-  const [started, setStarted] = useState(false);
+  // Short silent loops stored in the app play straight away, like the exercise clips; longer videos wait for Play.
+  const isLoop = video.kind === "mp4" && !!video.offline && video.duration.includes("loop");
+  const [started, setStarted] = useState(isLoop);
   const [failed, setFailed] = useState(false);
   const reported = useRef(false);
-  useEffect(() => { setStarted(false); setFailed(false); reported.current = false; }, [video]);
+  useEffect(() => { setStarted(isLoop); setFailed(false); reported.current = false; }, [video, isLoop]);
   const local = video.kind === "mp4" && !!video.offline;
   const url = (u: string) => (u.startsWith("http") ? u : `${import.meta.env.BASE_URL}${u}`);
   const watched = () => { if (!reported.current) { reported.current = true; onWatched(); } };
@@ -68,11 +70,10 @@ export function VideoPlayer({ video, onWatched }: { video: TrainingVideo; onWatc
       ) : (
         <div className="video-frame">
           <video
-            controls
+            controls={!isLoop}
             autoPlay
-            // Short looping clips (no speech) repeat silently, like the exercise clips.
-            loop={video.kind === "mp4" && video.duration.includes("loop")}
-            muted={video.kind === "mp4" && video.duration.includes("loop")}
+            loop={isLoop}
+            muted={isLoop}
             preload="metadata"
             playsInline
             crossOrigin={video.crossOrigin ? "anonymous" : undefined}

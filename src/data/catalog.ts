@@ -434,16 +434,20 @@ export const activities: Activity[] = [
   },
   {
     id: "recovery",
-    title: "Rest and schedule review",
+    title: "Rest and recovery",
     category: "Recovery",
     duration: "About 3 minutes",
-    equipment: "None",
-    purpose: "Reviews the work-rest schedule; it does not treat fatigue.",
-    description: "Review your work-rest schedule and note anything that interrupts your rest period.",
-    instructions: ["Compare recent sleep with your planned rest period.", "Note interruptions to raise at a crew check-in."],
-    steps: ["Review recent sleep history", "Note interruptions and schedule conflicts", "Raise concerns at a crew check-in"],
+    equipment: "Sleep station or sleeping bag",
+    purpose: "A short daily check that you are getting enough rest between work periods.",
+    description: "Compare last night’s sleep with your planned rest and note anything that cut it short.",
+    instructions: [
+      "Check last night’s sleep against your planned rest period.",
+      "Note anything that interrupted it: noise, light, workload or schedule changes.",
+      "Raise anything that keeps happening at your crew check-in.",
+    ],
+    steps: ["Review last night’s sleep", "Note what interrupted your rest", "Raise repeated problems at a crew check-in"],
     evidenceId: "measures",
-    video: { kind: "mp4", src: "media/clips/rest.mp4", crossOrigin: false, offline: true, title: "10 Days in Orion", credit: "NASA Johnson Space Center", duration: "0:03 loop", captions: "No speech", shows: "The crew sleeping bags rigged inside the Orion spacecraft cabin, where Artemis astronauts rest between work periods.", page: "https://images.nasa.gov/details/jsc2026m000044_10_Days_in_Orion", size: "0.5 MB, stored in the app" },
+    video: { kind: "mp4", src: "media/clips/rest.mp4", crossOrigin: false, offline: true, title: "10 Days in Orion", credit: "NASA Johnson Space Center", duration: "0:03 loop", captions: "No speech", shows: "Crew sleeping bags inside the Orion spacecraft cabin.", page: "https://images.nasa.gov/details/jsc2026m000044_10_Days_in_Orion", size: "0.5 MB, stored in the app" },
   },
 ];
 export function metricFor(id: Indicator) {

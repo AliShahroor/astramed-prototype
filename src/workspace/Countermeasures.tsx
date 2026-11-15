@@ -142,7 +142,7 @@ function TrainingDetail({ a }: { a: Activity }) {
           </dl>
           <h3 className="h3 spaced">Instructions</h3>
           <ol className="steps">{(a.instructions ?? []).map((s) => <li key={s}>{s}</li>)}</ol>
-          <p className="muted small">General demonstration, not an individual exercise prescription. Loads, durations and restraints come from the mission exercise plan.</p>
+          <p className="muted small">{a.category === "Recovery" ? "A self-check only. Sleep problems that persist should go to the crew medical officer." : "General demonstration, not an individual exercise prescription. Loads, durations and restraints come from the mission exercise plan."}</p>
         </div>
         <div>
           <fieldset className="checklist">
@@ -154,11 +154,11 @@ function TrainingDetail({ a }: { a: Activity }) {
             {checklistDone && <p className="tone ok small"><Check size={14} aria-hidden="true" /> Checklist complete for today</p>}
           </fieldset>
           <form className="session-form" onSubmit={record} noValidate>
-            <h3 className="h3">Record exercise session</h3>
-            <p className="muted small">Log a session you actually performed. Separate from watching the video or ticking the checklist.</p>
+            <h3 className="h3">{a.category === "Recovery" ? "Log a rest period" : "Record exercise session"}</h3>
+            <p className="muted small">{a.category === "Recovery" ? "Record rest you actually took, such as a nap after a shift." : "Log a session you actually performed. Separate from watching the video or ticking the checklist."}</p>
             <div className="form-row">
               <label className="field-label">Duration (min)<input className="field" inputMode="numeric" value={minutes} onChange={(e) => setMinutes(e.target.value)} aria-describedby="sess-err" /></label>
-              <label className="field-label">Note (optional)<input className="field" value={note} maxLength={120} onChange={(e) => setNote(e.target.value)} placeholder="e.g. reduced load" /></label>
+              <label className="field-label">Note (optional)<input className="field" value={note} maxLength={120} onChange={(e) => setNote(e.target.value)} placeholder={a.category === "Recovery" ? "e.g. nap after shift" : "e.g. reduced load"} /></label>
             </div>
             <p id="sess-err" className="error" role="alert">{err}</p>
             <button className="btn btn-primary" type="submit">Record session</button>

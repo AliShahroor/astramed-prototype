@@ -931,3 +931,5 @@ label.choice { text-align: center; padding: var(--s2) var(--s2); font-size: 14px
 .indicator[aria-pressed="true"] .indicator-name { color: var(--accent-strong); }
 .indicator[aria-pressed="true"] .indicator-arrow { opacity: 1; transform: none; }
 .indicator-bottom { padding-right: 22px; }
+/* Keep looping clips at the same size as the exercise stage */
+.training-detail .video { max-width: 880px; }
