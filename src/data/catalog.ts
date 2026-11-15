@@ -248,10 +248,11 @@ function makeBaseline(overrides: Partial<Record<Indicator, number>>) {
   ) as Astronaut["baseline"];
 }
 const NASA_HRP = "https://www.nasa.gov/hrp/hrp-videos/";
-const NASA_EX = "https://images.nasa.gov/details/jsc2025m000002_How_Do_Astronauts_Exercise_in_Space_250106-MP4";
 const CSA_TITLE = "Physical activity in space";
 const csaClip = (src: string, shows: string) => ({ src: `media/clips/${src}.mp4`, title: CSA_TITLE, credit: "Canadian Space Agency", shows, exact: true });
-const nasaClip = (src: string, shows: string, exact = true) => ({ src: `media/clips/${src}.mp4`, title: "How Do Astronauts Exercise in Space?", credit: "NASA", shows, page: NASA_EX, exact });
+const HOPKINS = "https://images.nasa.gov/details/jsc2018m000791-ARED_PT_Hopkins_1";
+/** Cut from NASA JSC footage of astronaut Mike Hopkins training on the ground ARED unit (jsc2018m000791). */
+const aredClip = (src: string, shows: string) => ({ src: `media/clips/${src}.mp4`, title: "ARED physical training (Mike Hopkins)", credit: "NASA Johnson Space Center", shows, page: HOPKINS, exact: true });
 const ECLIPS = "https://assets.science.nasa.gov/content/dam/science/cds/eclips/assets/videos";
 /**
  * Training library. Videos are NASA educational footage, embedded with attribution (verified 14 Nov 2026):
@@ -285,7 +286,7 @@ export const activities: Activity[] = [
     demoLoad: 90,
     device: "ARED",
     muscles: { primary: ["hamstrings", "glutes", "lowerback"], secondary: ["quads", "traps", "forearms"] },
-    clip: nasaClip("ared", "An astronaut lifts on ARED aboard the ISS.", false),
+    clip: aredClip("deadlift", "Astronaut Mike Hopkins deadlifts on a ground ARED unit at NASA Johnson."),
     title: "Deadlift",
     category: "Resistance",
     kind: "strength",
@@ -307,7 +308,7 @@ export const activities: Activity[] = [
     demoLoad: 70,
     device: "ARED",
     muscles: { primary: ["calves"], secondary: [] },
-    clip: nasaClip("ared", "An astronaut lifts on ARED aboard the ISS.", false),
+    clip: aredClip("heelraise", "Astronaut Mike Hopkins does heel raises on a ground ARED unit at NASA Johnson."),
     title: "Heel raise",
     category: "Resistance",
     kind: "strength",
@@ -329,7 +330,7 @@ export const activities: Activity[] = [
     demoLoad: 50,
     device: "ARED",
     muscles: { primary: ["chest"], secondary: ["shoulders", "triceps"] },
-    clip: nasaClip("bench", "An astronaut performs a bench press on ARED aboard the ISS."),
+    clip: aredClip("bench", "Astronaut Mike Hopkins bench presses on the ARED bench at NASA Johnson."),
     title: "Bench press",
     category: "Resistance",
     kind: "strength",
@@ -394,7 +395,7 @@ export const activities: Activity[] = [
     id: "flywheel",
     device: "Flywheel",
     muscles: { primary: ["lats", "quads"], secondary: ["biceps", "glutes", "hamstrings", "lowerback"] },
-    clip: nasaClip("flywheel", "A NASA test subject uses a compact rowing and resistance device on the ground.", false),
+    clip: { src: "media/clips/flywheel.mp4", title: "Orion Flywheel Exercise Device Reel", credit: "NASA Johnson Space Center", shows: "NASA testers row on the flywheel exercise device built for the Orion spacecraft.", page: "https://images.nasa.gov/details/jsc2025m000683", exact: true },
     title: "Flywheel resistance",
     category: "Resistance",
     kind: "flywheel",
