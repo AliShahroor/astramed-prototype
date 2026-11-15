@@ -443,6 +443,7 @@ export const activities: Activity[] = [
     instructions: ["Compare recent sleep with your planned rest period.", "Note interruptions to raise at a crew check-in."],
     steps: ["Review recent sleep history", "Note interruptions and schedule conflicts", "Raise concerns at a crew check-in"],
     evidenceId: "measures",
+    video: { kind: "mp4", src: "media/clips/rest.mp4", crossOrigin: false, offline: true, title: "10 Days in Orion", credit: "NASA Johnson Space Center", duration: "0:03 loop", captions: "No speech", shows: "The crew sleeping bags rigged inside the Orion spacecraft cabin, where Artemis astronauts rest between work periods.", page: "https://images.nasa.gov/details/jsc2026m000044_10_Days_in_Orion", size: "0.5 MB, stored in the app" },
   },
 ];
 export function metricFor(id: Indicator) {

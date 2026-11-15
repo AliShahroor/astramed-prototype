@@ -72,6 +72,9 @@ export function VideoPlayer({ video, onWatched }: { video: TrainingVideo; onWatc
           <video
             controls
             autoPlay
+            // Short looping clips (no speech) repeat silently, like the exercise clips.
+            loop={video.kind === "mp4" && video.duration.includes("loop")}
+            muted={video.kind === "mp4" && video.duration.includes("loop")}
             preload="metadata"
             playsInline
             crossOrigin={video.crossOrigin ? "anonymous" : undefined}
