@@ -183,7 +183,7 @@ test("physical training: video, checklist and session are tracked separately", a
   await page.goto("./#/countermeasures/physical");
   await expect(page.getByRole("heading", { name: "Treadmill aerobic exercise", level: 2 })).toBeVisible();
   await expect(page.locator(".video-credit")).toContainText("Canadian Space Agency");
-  await page.locator(".training-item", { hasText: "Mobility" }).click();
+  await page.locator(".training-item", { hasText: "Rest" }).click();
   for (const box of await page.locator(".check-row input").all()) await box.check();
   await expect(page.getByText("Checklist complete for today")).toBeVisible();
   await page.getByLabel("Duration (min)").fill("0");

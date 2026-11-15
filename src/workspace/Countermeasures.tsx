@@ -37,7 +37,7 @@ export function Countermeasures() {
   );
 }
 
-const SHORT: Record<string, string> = { treadmill: "Treadmill", cycle: "Cycle", flywheel: "Flywheel", mobility: "Mobility", recovery: "Rest" };
+const SHORT: Record<string, string> = { treadmill: "Treadmill", cycle: "Cycle", flywheel: "Flywheel", row: "Row", recovery: "Rest" };
 
 function Physical() {
   const { state, astronaut } = useWs();
@@ -48,7 +48,7 @@ function Physical() {
     checklist: state.completions.some((c) => c.activityId === id && c.astronautId === astronaut.id && c.day === state.day && c.scenario === state.scenario && isChecklist(c)),
     watched: state.videoViews.some((v) => v.activityId === id && v.astronautId === astronaut.id && v.scenario === state.scenario),
   });
-  const order = ["treadmill", "cycle", "squat", "deadlift", "heelraise", "bench", "flywheel", "mobility", "recovery"];
+  const order = ["treadmill", "cycle", "squat", "deadlift", "row", "bench", "heelraise", "flywheel", "recovery"];
   return (
     <div className="training">
       <nav className="ex-tabs" aria-label="Exercises">
