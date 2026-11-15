@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ExternalLink, Play, WifiOff } from "lucide-react";
+import { Play, WifiOff } from "lucide-react";
 import type { TrainingVideo } from "../types";
 
 function useOnline() {
@@ -27,12 +27,10 @@ export function VideoPlayer({ video, onWatched }: { video: TrainingVideo; onWatc
   const url = (u: string) => (u.startsWith("http") ? u : `${import.meta.env.BASE_URL}${u}`);
   const watched = () => { if (!reported.current) { reported.current = true; onWatched(); } };
 
+  // One short credit line, matching the exercise clips. Details stay in the link and the tooltip.
   const attribution = (
-    <p className="video-credit">
-      Video: {video.credit} · “{video.title}” · {video.duration}
-      {video.kind === "mp4" ? ` · ${video.size}` : ""} · {video.captions}{local ? " · available offline" : " · streams from NASA"}.{" "}
-      <a href={video.page} target="_blank" rel="noreferrer">Source page <ExternalLink size={12} aria-hidden="true" /></a>
-      <span className="block muted">Shows: {video.shows} NASA educational footage; use does not imply NASA endorsement of ASTRAMED.</span>
+    <p className="video-credit" title={video.shows}>
+      Reference: <a href={video.page} target="_blank" rel="noreferrer">{video.credit}</a>
     </p>
   );
 
